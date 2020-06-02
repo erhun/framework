@@ -1,0 +1,65 @@
+uid:
+  snowflake:
+    timeBits: 29
+    workerBits: 21
+    epochStr: 2020-01-01
+    boostPower: 3 #环形环存数量
+    paddingFactor: 50 #指定何时向RingBuffer中填充UID, 取值为百分比(0, 100), 默认为50
+    scheduleInterval: 60 #另外一种RingBuffer填充时机, 在Schedule线程中, 周期性检查填充
+
+spring:
+  application:
+    name: framework
+  main:
+    allow-bean-definition-overriding: false
+  datasource:
+    url: jdbc:h2:mem:test
+    username:
+    password:
+    driver-class-name: org.h2.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: 1
+      min-idle: 1
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runsMillis: 60000
+      min-evictable-idle-timeMillis: 300000
+      validation-query: select 'test'
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-open-prepared-statements: 20
+      max-pool-prepared-statement-per-connection-size: 20
+      filters: stat
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+      use-global-data-source-stat: true
+
+mybatis:
+  #typeAliasesPackage:
+  mapperLocations: classpath:mybatis/mapper/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  config: classpath:log4j2-dev.xml
+
+### xxl-job admin address list, such as "http://address" or "http://address01,http://address02"
+xxl:
+  job:
+    admin:
+      addresses: http://192.168.3.206:8082/xxl-job-admin
+    accessToken:
+    executor:
+      appname: job-test
+      address:
+      ip:
+      port: 9999
+      logpath: /Users/gorilla/downloads/holdingfuture/logs
+      logretentiondays: 30
+
+framework:
+  orm:
+    mybatis:
+      scan-path: org.erhun.framework.orm.test.dao

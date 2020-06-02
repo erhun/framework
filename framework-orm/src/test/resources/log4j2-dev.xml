@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="FATAL">
+	<Properties>
+		<!-- 开发参数 -->
+		<Property name="STDOUT_PATTERN">%d{yyyy-MM-dd HH:mm:ss} %thread - %p - [%C.%M()@%L] - [%X{classMethod}] - %m%n</Property>
+		<Property name="LOG_FILE_PATH" value="/home/dev/holdingfuture/logs" />
+
+		<Property name="MODULE_NAME" value="uid-generator-service" />
+	</Properties>
+
+	<Appenders>
+		<!-- 控制台日志 -->
+		<Console name="STDOUT" target="SYSTEM_OUT">
+			<PatternLayout>
+				<pattern>${STDOUT_PATTERN}</pattern>
+			</PatternLayout>
+		</Console>
+
+		<!-- 调试日志 -->
+		<RollingFile name="RollingDebugFile" fileName="${LOG_FILE_PATH}/${MODULE_NAME}/debug.log" filePattern="${LOG_FILE_PATH}/${MODULE_NAME}/$${date:yyyyMMdd}/debug-%d{yyyy-MM-dd-HH}.log">
+			<!-- 输出level及以上级别的信息(onMatch)，其他的直接拒绝(onMismatch) -->
+			<Filters>
+				<ThresholdFilter level="INFO" onMatch="DENY" onMismatch="NEUTRAL" />
+				<ThresholdFilter level="DEBUG" onMatch="ACCEPT" onMismatch="DENY" />
+			</Filters>
+
+			<PatternLayout>
+				<pattern>${STDOUT_PATTERN}</pattern>
+			</PatternLayout>
+
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1" modulate="true" />
+			</Policies>
+		</RollingFile>
+
+		<!-- 信息日志 -->
+		<RollingFile name="RollingInfoFile" fileName="${LOG_FILE_PATH}/${MODULE_NAME}/info.log" filePattern="${LOG_FILE_PATH}/${MODULE_NAME}/$${date:yyyyMMdd}/info-%d{yyyy-MM-dd-HH}.log">
+			<!-- 输出level及以上级别的信息(onMatch)，其他的直接拒绝(onMismatch) -->
+			<Filters>
+				<ThresholdFilter level="WARN" onMatch="DENY" onMismatch="NEUTRAL" />
+				<ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY" />
+			</Filters>
+
+			<PatternLayout>
+				<pattern>${STDOUT_PATTERN}</pattern>
+			</PatternLayout>
+
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1" modulate="true" />
+			</Policies>
+		</RollingFile>
+
+		<!-- 警告日志 -->
+		<RollingFile name="RollingWarnFile" fileName="${LOG_FILE_PATH}/${MODULE_NAME}/warn.log" filePattern="${LOG_FILE_PATH}/${MODULE_NAME}/$${date:yyyyMMdd}/warn-%d{yyyy-MM-dd-HH}.log">
+			<!-- 输出level及以上级别的信息(onMatch)，其他的直接拒绝(onMismatch) -->
+			<Filters>
+				<ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL" />
+				<ThresholdFilter level="WARN" onMatch="ACCEPT" onMismatch="DENY" />
+			</Filters>
+
+			<PatternLayout>
+				<pattern>${STDOUT_PATTERN}</pattern>
+			</PatternLayout>
+
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1" modulate="true" />
+			</Policies>
+		</RollingFile>
+
+		<!-- 错误日志 -->
+		<RollingFile name="RollingErrorFile" fileName="${LOG_FILE_PATH}/${MODULE_NAME}/error.log" filePattern="${LOG_FILE_PATH}/${MODULE_NAME}/$${date:yyyyMMdd}/error-%d{yyyy-MM-dd-HH}.log">
+			<!--控制台只输出level及以上级别的信息(onMatch)，其他的直接拒绝(onMismatch) -->
+			<Filters>
+				<ThresholdFilter level="FATAL" onMatch="DENY" onMismatch="NEUTRAL" />
+				<ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY" />
+			</Filters>
+
+			<PatternLayout>
+				<pattern>${STDOUT_PATTERN}</pattern>
+			</PatternLayout>
+
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1" modulate="true" />
+			</Policies>
+		</RollingFile>
+	</Appenders>
+
+	<Loggers>
+		<Root level="INFO">
+			<AppenderRef ref="STDOUT" />
+
+			<AppenderRef ref="RollingDebugFile" />
+			<AppenderRef ref="RollingInfoFile" />
+			<AppenderRef ref="RollingWarnFile" />
+			<AppenderRef ref="RollingErrorFile" />
+		</Root>
+
+		<!--<logger name="org.mybatis" level="DEBUG">
+		</logger>-->
+
+		<!--<logger name="org.erhun.identity" level="INFO">
+		</logger>-->
+	</Loggers>
+
+</Configuration>
