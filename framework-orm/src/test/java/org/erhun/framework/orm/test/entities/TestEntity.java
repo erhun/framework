@@ -1,5 +1,7 @@
 package org.erhun.framework.orm.test.entities;
 
+import org.erhun.framework.orm.annotations.IdGenerator;
+import org.erhun.framework.orm.annotations.IdentityType;
 import org.erhun.framework.orm.annotations.Table;
 import org.erhun.framework.orm.entities.IEntity;
 
@@ -10,13 +12,14 @@ import java.time.Instant;
  * @Date 2019-10-12
  */
 @Table("t_test")
+@IdGenerator(type = IdentityType.AUTO_INCREMENT, value="snowflakeIdApi")
 public class TestEntity implements IEntity<Long> {
 
-    Long id;
+    private Long id;
 
-    String text;
+    private String text;
 
-    Instant createTime;
+    private Instant createTime;
 
     @Override
     public Long getId() {

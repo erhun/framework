@@ -1,5 +1,7 @@
 package org.erhun.framework.orm.annotations;
 
+import org.erhun.framework.orm.annotations.validator.Validator;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -28,7 +30,7 @@ public @interface AttributeDef {
 
     Visible [] visible() default {};
 
-    //Validator[] validators() default {};
+    Validator[] validators() default {};
 
     public static enum Visible{
         ADD,

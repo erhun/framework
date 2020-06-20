@@ -5,21 +5,23 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>framework-domain</artifactId>
     <packaging>jar</packaging>
+    <version>1.0.0</version>
     <parent>
-        <groupId>com.erhun.framework</groupId>
+        <groupId>org.erhun.framework</groupId>
         <artifactId>framework</artifactId>
         <version>1.0.0</version>
     </parent>
     <dependencies>
         <dependency>
-            <groupId>com.erhun.framework</groupId>
+            <groupId>org.erhun.framework</groupId>
             <artifactId>framework-basic</artifactId>
             <version>1.0.0</version>
         </dependency>
         <dependency>
-            <groupId>com.erhun.framework</groupId>
+            <groupId>org.erhun.framework</groupId>
             <artifactId>framework-orm</artifactId>
             <version>1.0.0</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

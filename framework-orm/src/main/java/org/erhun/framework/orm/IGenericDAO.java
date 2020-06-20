@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * 
+ *
  * @author weichao<gorilla@gliyun.com>
  *
  * @param <E>
@@ -22,7 +22,7 @@ public interface IGenericDAO<Id extends Serializable, E extends IEntity>{
 	 * @return
 	 */
 	int add(@Param("entity") E entity);
-	
+
 	/**
 	 * 批量插入
 	 */
@@ -89,7 +89,7 @@ public interface IGenericDAO<Id extends Serializable, E extends IEntity>{
      * @param pv
      * @return
      */
-    List <E> queryByColumn(@Param("columns") String columns, @Param("pv") PV... pv);
+    List queryByColumn(@Param("columns") String columns, @Param("pv") PV... pv);
 
 	/**
 	 *
@@ -148,6 +148,13 @@ public interface IGenericDAO<Id extends Serializable, E extends IEntity>{
      */
     int delete(@Param("id") Id id);
 
+	/**
+	 * 根据id删除
+	 * @param idList
+	 * @return
+	 */
+	int deleteAll(@Param("id") String idList);
+
     /**
      * 根据pvs删除
      * @param pvs
@@ -176,13 +183,13 @@ public interface IGenericDAO<Id extends Serializable, E extends IEntity>{
 	 * @return
 	 */
 	long count(@Param("pvs") PV... pvs);
-	
+
 	/**
-     * 
+     *
      * @param column The column name
      * @param values
      * @return
      */
     List <E> in(@Param("column") String column, @Param("values") Serializable... values);
-	
+
 }

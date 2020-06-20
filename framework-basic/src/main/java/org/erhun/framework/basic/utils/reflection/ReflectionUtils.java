@@ -1,7 +1,7 @@
 package org.erhun.framework.basic.utils.reflection;
 
 import org.erhun.framework.basic.utils.ClassUtils;
-import org.erhun.framework.basic.utils.datetime.DateUtility;
+import org.erhun.framework.basic.utils.datetime.DateUtils;
 import org.erhun.framework.basic.utils.number.NumberUtils;
 import org.erhun.framework.basic.utils.string.CharUtility;
 import org.erhun.framework.basic.utils.string.StringUtils;
@@ -1052,9 +1052,9 @@ public class ReflectionUtils {
 					return new Float(buf);
 				}
 			}else if(type == java.sql.Date.class){
-				return DateUtility.convertToSqlDate(buf);
+				return DateUtils.convertToSqlDate(buf);
 			}else if(type == java.sql.Timestamp.class){
-				return DateUtility.convertToTimestamp(buf);
+				return DateUtils.convertToTimestamp(buf);
 			}else if(type == Long.class){
 				return new Long( buf );
 			}else if(type == Boolean.class){
@@ -1065,7 +1065,7 @@ public class ReflectionUtils {
 			}else if(type == Double.class){
 				return new Double( buf );
 			}else if(type == java.util.Date.class){
-				return DateUtility.toSqlDate( buf );
+				return DateUtils.toSqlDate( buf );
 			}else if(type == java.math.BigDecimal.class){
 				if( NumberUtils.isNumber(buf) ){
 					return new java.math.BigDecimal(buf);

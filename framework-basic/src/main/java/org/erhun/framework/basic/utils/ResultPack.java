@@ -7,7 +7,7 @@ import java.util.*;
  * 
  * @author weichao <gorilla@aliyun.com>
  */
-public abstract class ResultPack implements Serializable {
+public class ResultPack implements Serializable {
 
     /**
      * 
@@ -62,23 +62,23 @@ public abstract class ResultPack implements Serializable {
         return new Result(FAIL, message);
     }
 
-    public abstract ResultPack set(String key, Object value);
+    public ResultPack set(String key, Object value){return null;}
 
-    public abstract boolean isSucceed();
+    public boolean isSucceed(){return false;}
 
-    public abstract boolean isFailed();
+    public boolean isFailed(){return true;};
 
-    public abstract ResultPack model(Object model);
+    public ResultPack model(Object model){return null;};
 
-    public abstract <T> T model();
+    public <T> T model(){return null;};
 
-    public abstract <T> T get(String key);
-    
-    public abstract <T> T code();
-    
-    public abstract <T> T message();
+    public <T> T get(String key){return null;};
 
-    private static class Result extends ResultPack implements Map<String, Object>, Serializable {
+    public <T> T code(){return null;};
+
+    public <T> T message(){return null;};
+
+    public static class Result extends ResultPack implements Map<String, Object>, Serializable {
 
         private static final long serialVersionUID = 1L;
 

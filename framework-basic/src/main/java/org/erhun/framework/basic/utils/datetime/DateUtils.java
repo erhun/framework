@@ -15,7 +15,7 @@ import java.util.Date;
 /**
  * @author weichao <gorilla@aliyun.com>
  */
-public class DateUtility {
+public class DateUtils {
 
     public static java.sql.Date toSqlDate(String date) {
         if (isNotDate(date)) {

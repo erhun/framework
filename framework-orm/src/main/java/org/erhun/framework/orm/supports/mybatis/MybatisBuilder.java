@@ -27,26 +27,26 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * 
+ *
  * @author weichao<gorilla@aliyun.com>
  *
  */
 public final class MybatisBuilder {
-    
+
     private static final AtomicLong UID_GENERATOR = new AtomicLong(System.currentTimeMillis());
-    
+
     public static String nextUID() {
         return Long.toHexString(UID_GENERATOR.getAndIncrement());
     }
-    
+
     public static void buildDefaultMappedStatements(Configuration configuration, Dialect dialect, Class <?> daoClass){
-        
+
         new Builder(configuration, dialect, daoClass).build();
-        
+
     }
-    
+
     private static class Builder{
-        
+
         private Configuration configuration;
         private Class<?> daoClass;
         private Class<?> entityClass;
@@ -57,7 +57,7 @@ public final class MybatisBuilder {
         private Map <String, String> tableAlias;
         private String masterAlias = SQLUtils.MAIN_ENTITY_ALIAS;
         private AtomicInteger tableIndex;
-        
+
         private Builder(Configuration configuration, Dialect dialect, Class<?> daoClass) {
             this.configuration = configuration;
             this.dialect = dialect;
@@ -68,17 +68,18 @@ public final class MybatisBuilder {
             this.tableIndex = new AtomicInteger(0);
             this.attributeOverrides = entityClass.getAnnotation(AttributeOverrides.class);
         }
-        
+
         private void build(){
-            
+
             if(entityClass == null) {
                 return;
             }
-            
+
             buildResultMap();
             buildAddMappedStatement();
             buildAddListMappedStatement();
             buildDeleteMappedStatement();
+            buildDeleteAllMappedStatement();
             buildDeleteColumnMappedStatement();
             buildUpdateMappedStatement();
             buildUpdateColumnMappedStatement();
@@ -99,11 +100,11 @@ public final class MybatisBuilder {
             buildCountByPageMappedStatement();
             buildInRetriveMappedStatement();
         }
-        
+
         private void buildResultMap() {
-            
+
             List <ResultMapping> mappings = new ArrayList <ResultMapping> ();
-            
+
             for (AttributeInfo attributeInfo : entityFields) {
                 String columnName = attributeInfo.getColumnName();
                 String nestedResultMapId = null;
@@ -125,11 +126,11 @@ public final class MybatisBuilder {
                         attributeInfo.getField().getType()).flags(resultFlags).nestedResultMapId(nestedResultMapId).build();
                 mappings.add(mapping);
             }
-            
+
             resultMaps = new ArrayList <ResultMap>();
-            
+
             String resultMapId = daoClass.getName() + "." + entityClass.getSimpleName();
-            
+
             if(!configuration.hasResultMap(resultMapId)){
                 ResultMap resultMap = new ResultMap.Builder(configuration, resultMapId, entityClass, mappings).build();
                 resultMaps.add(resultMap);
@@ -143,7 +144,7 @@ public final class MybatisBuilder {
                 resultMaps.add(resultMap);
                 configuration.addResultMap(resultMap);
             }
-            
+
             resultMapId = "." + entityClass.getSimpleName();
 
             if(!configuration.hasResultMap(resultMapId)){
@@ -151,19 +152,19 @@ public final class MybatisBuilder {
                 resultMaps.add(resultMap);
                 configuration.addResultMap(resultMap);
             }
-            
+
         }
 
         private void buildGetMappedStatement() {
             String statement = daoClass.getName() + ".get";
             addMappedStatement(configuration, statement, buildGetSQL(), SqlCommandType.SELECT, resultMaps, null);
         }
-        
+
         private void buildFindByIdMappedStatement() {
             String statement = daoClass.getName() + ".findById";
             addMappedStatement(configuration, statement, buildFindByIdSQL(), SqlCommandType.SELECT, resultMaps, null);
         }
-        
+
         private void buildFindColumnMappedStatement() {
             String statement = daoClass.getName() + ".findByColumn";
             addMappedStatement(configuration, statement, buildFindByColumnSQL(), SqlCommandType.SELECT, resultMaps, null);
@@ -173,37 +174,37 @@ public final class MybatisBuilder {
             String statement = daoClass.getName() + ".findByCriteria";
             addMappedStatement(configuration, statement, buildFindByCriteriaSQL(), SqlCommandType.SELECT, resultMaps, null);
         }
-        
+
         private void buildDuplicateMappedStatement() {
             String statement = daoClass.getName() + ".duplicate";
             addMappedStatement(configuration, statement, buildDuplicateSQL(), SqlCommandType.SELECT, null, "int");
         }
-        
+
         private void buildExistMappedStatement() {
             String statement = daoClass.getName() + ".exist";
             addMappedStatement(configuration, statement, buildExistSQL(), SqlCommandType.SELECT, null, null);
         }
-        
+
         private void buildInRetriveMappedStatement() {
             String statement = daoClass.getName() + ".in";
             addMappedStatement(configuration, statement, buildInRetrieveSQL(), SqlCommandType.SELECT, resultMaps, null);
         }
-        
+
         private void buildQueryAllMappedStatement() {
             String statement = daoClass.getName() + ".queryAll";
             addMappedStatement(configuration, statement, buildQueryAllSQL(), SqlCommandType.SELECT, resultMaps, null);
         }
-        
+
         private void buildQueryByIdMappedStatement() {
             String statement = daoClass.getName() + ".queryById";
             addMappedStatement(configuration, statement, buildQueryByIdSQL(), SqlCommandType.SELECT, resultMaps, null);
         }
-        
+
         private void buildQueryCriteriaMappedStatement() {
             String statement = daoClass.getName() + ".queryByCriteria";
             addMappedStatement(configuration, statement, buildQueryCriteriaSQL(), SqlCommandType.SELECT, resultMaps, null);
         }
-        
+
         private void buildQueryByColumnMappedStatement() {
             String statement = daoClass.getName() + ".queryByColumn";
             addMappedStatement(configuration, statement, buildQueryByColumnSQL(), SqlCommandType.SELECT, resultMaps, null);
@@ -218,22 +219,22 @@ public final class MybatisBuilder {
             String statement = daoClass.getName() + ".queryMetadata";
             addMappedStatement(configuration, statement, buildQueryMetadataSQL(), SqlCommandType.SELECT, null, "object[]");
         }
-        
+
         private void buildQueryByPageMappedStatement() {
             String statement = daoClass.getName() + ".queryByPage";
             addMappedStatement(configuration, statement, buildQueryByPageSQL(), SqlCommandType.SELECT, resultMaps, null);
         }
-        
+
         private void buildCountByPageMappedStatement() {
             String statement = daoClass.getName() + ".countByPage";
             addMappedStatement(configuration, statement, buildCountByPageSelectiveSQL(), SqlCommandType.SELECT, null, "long");
         }
-        
+
         private void buildCountMappedStatement() {
             String statement = daoClass.getName() + ".count";
             addMappedStatement(configuration, statement, buildCountSQL(), SqlCommandType.SELECT, null, "long");
         }
-    
+
         private void buildAddMappedStatement() {
             String statement = daoClass.getName() + ".add";
             addMappedStatement(configuration, statement, buildInsertSQL(), SqlCommandType.INSERT, null, null);
@@ -243,7 +244,7 @@ public final class MybatisBuilder {
             String statement = daoClass.getName() + ".addList";
             addMappedStatement(configuration, statement, buildInsertListSQL(), SqlCommandType.INSERT, null, null);
         }
-        
+
         private void buildDeleteMappedStatement() {
             String statement = daoClass.getName() + ".delete";
             String sql =  buildDeleteSQL();
@@ -253,7 +254,17 @@ public final class MybatisBuilder {
                 addMappedStatement(configuration, statement, sql, SqlCommandType.UPDATE, null, null);
             }
         }
-        
+
+        private void buildDeleteAllMappedStatement() {
+            String statement = daoClass.getName() + ".deleteAll";
+            String sql =  buildDeleteAllSQL();
+            if(sql.indexOf("<delete") > -1) {
+                addMappedStatement(configuration, statement, sql, SqlCommandType.DELETE, null, null);
+            }else{
+                addMappedStatement(configuration, statement, sql, SqlCommandType.UPDATE, null, null);
+            }
+        }
+
         private void buildDeleteColumnMappedStatement() {
             String statement = daoClass.getName() + ".deleteByColumn";
             SqlCommandType commandType;
@@ -265,21 +276,21 @@ public final class MybatisBuilder {
             }
             addMappedStatement(configuration, statement, buildDeleteByColumnSQL(), commandType, null, null);
         }
-        
+
         private void buildUpdateMappedStatement() {
             String statement = daoClass.getName() + ".update";
             addMappedStatement(configuration, statement, buildUpdateSQL(), SqlCommandType.UPDATE, null, null);
         }
-        
+
         private void buildUpdateColumnMappedStatement() {
             String statement = daoClass.getName() + ".updateColumn";
             addMappedStatement(configuration, statement, buildUpdateColumnSQL(), SqlCommandType.UPDATE, null, null);
         }
-        
+
         private String buildInsertSQL() {
-            
+
             StringBuilder buf1 = new StringBuilder();
-            StringBuilder buf2 = new StringBuilder();           
+            StringBuilder buf2 = new StringBuilder();
 
             Field idField = null;
             String incrementValue = null;
@@ -334,7 +345,7 @@ public final class MybatisBuilder {
 
             buf1.append(">");
 
-            
+
             buf1.append("insert into ").append(SQLUtils.resolveTableName(entityClass));
             buf1.append(" <trim prefix=\"(\" suffix=\")\" suffixOverrides=\",\">");
 
@@ -348,9 +359,9 @@ public final class MybatisBuilder {
 
             buf1.append(buf2);
             buf1.append("</insert>");
-            
+
             return buf1.toString();
-            
+
         }
 
         private String buildInsertListSQL() {
@@ -392,17 +403,17 @@ public final class MybatisBuilder {
         }
 
         private String buildUpdateSQL() {
-            
+
             StringBuilder buf = new StringBuilder();
-            
+
             buf.append("<update>");
             buf.append("update ").append(SQLUtils.resolveTableName(entityClass)).append("<set>");
-            
+
             buf.append("<choose>");
             buf.append("<when test='affects!=null and affects.length > 0'>");
             buf.append("<foreach collection=\"affects\" item=\"pv\" ");
             buf.append("index=\"index\" open=\"\" close=\"\" separator=\",\">");
-            buf.append("${@com.duorong.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\".class,pv.name)}=#{entity.${pv.name}}");
+            buf.append("${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\".class,pv.name)}=#{entity.${pv.name}}");
             buf.append("</foreach>");
             buf.append("</when>");
             buf.append("<otherwise>");
@@ -416,59 +427,59 @@ public final class MybatisBuilder {
             buf.append("</set>");
             buf.append(" where id=#{entity.id}");
             buf.append("</update>");
-            
-            return buf.toString();      
-            
+
+            return buf.toString();
+
         }
-        
+
         private String buildUpdateColumnSQL() {
-            
-            return "<update>update " + SQLUtils.resolveTableName(entityClass) + " set ${@com.duorong.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\", name)}=#{value} where id=#{id}</update>";
-            
+
+            return "<update>update " + SQLUtils.resolveTableName(entityClass) + " set ${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\", name)}=#{value} where id=#{id}</update>";
+
         }
-        
+
         private String buildCountSQL() {
-            
+
             StringBuilder buf = new StringBuilder();
-            
+
             buf.append("<select>");
             buf.append("select count(*) from ").append(SQLUtils.resolveTableName(entityClass)).append(" where ");
             buf.append("<foreach collection=\"pvs\" item=\"pv\" open=\"\" close=\"\" separator=\" and \">");
             buf.append("<choose><when test=\"pv.value !=null and (pv.value instanceof java.util.List or pv.value.class.array)\">");
-            buf.append("${@com.duorong.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\", pv.name)} in ");
+            buf.append("${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\", pv.name)} in ");
             buf.append("<foreach collection=\"pv.value\" item=\"v\" open=\"(\" close=\")\" separator=\",\">");
             buf.append("#{v}");
             buf.append("</foreach>");
             buf.append("</when>");
-            buf.append("<otherwise>${@com.duorong.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\", pv.name)}${@com.duorong.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</otherwise></choose>");
+            buf.append("<otherwise>${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\", pv.name)}${@org.erhun.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</otherwise></choose>");
             buf.append("</foreach>");
-            
+
             buf.append("</select>");
-            
-            return buf.toString();      
-            
+
+            return buf.toString();
+
         }
-        
+
         private String buildQueryAllSQL() {
-            
+
             StringBuilder buf = new StringBuilder("<select>select ");
-                
+
             for (AttributeInfo field : entityFields) {
                 if(field.isQueryable()){
                     buf.append(field.getColumnName()).append(",");
                 }
             }
-            
+
             buf.setLength(buf.length() - 1);
             buf.append(" from ").append(SQLUtils.resolveTableName(entityClass)).append(" where 1=1");
-            
+
             buildWhere(buf);
             buildOrderBy(buf);
-            
+
             buf.append("</select>");
-            
+
             return buf.toString();
-            
+
         }
 
         private void buildWhere(StringBuilder buf) {
@@ -476,32 +487,32 @@ public final class MybatisBuilder {
                 buf.append(" and deleted='1'");
             }
         }
-        
+
         private void buildOrderBy(StringBuilder buf) {
             if(IOrderEntity.class.isAssignableFrom(entityClass)){
                 buf.append(" order by show_index");
             }
         }
-        
+
         private String buildQueryByIdSQL() {
-            
+
             StringBuilder buf = new StringBuilder("<select>select ");
-                
+
             for (AttributeInfo field : entityFields) {
                 if(field.isQueryable()){
                     buf.append(field.getColumnName()).append(",");
                 }
             }
-            
+
             buf.setLength(buf.length() - 1);
             buf.append(" from ").append(SQLUtils.resolveTableName(entityClass));
             buf.append(" where id in(${id})");
             buf.append("</select>");
-            
+
             return buf.toString();
-            
+
         }
-        
+
         private String buildQueryCriteriaSQL() {
 
             StringBuilder buf = new StringBuilder();
@@ -510,7 +521,7 @@ public final class MybatisBuilder {
             buf.append("</select>");
 
             return buf.toString();
-            
+
         }
 
         private void buildQueryCriteriaSQL(StringBuilder buf) {
@@ -607,7 +618,7 @@ public final class MybatisBuilder {
                 if (StringUtils.isNotBlank(item)) {
                     condition.append(" and ").append(alias).append(".name like concat(#{entity.").append(field.getFieldName()).append("},'%')");
                 } else {
-                    condition.append(" and ").append("t.").append(columnName).append("${@com.duorong.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",\""+field.getFieldName()+"\",entity."+field.getFieldName()+")}");
+                    condition.append(" and ").append("t.").append(columnName).append("${@org.erhun.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",\""+field.getFieldName()+"\",entity."+field.getFieldName()+")}");
                     //condition.append(" and ").append("t.").append(columnName).append(" like concat(#{entity.").append(with.getName()).append("},'%')");
                 }
                 condition.append("</when><otherwise>");
@@ -633,7 +644,7 @@ public final class MybatisBuilder {
 
             sql.append("<choose><when test='fetchColumns!=null'>");
             sql.append("<foreach collection=\"fetchColumns\" item=\"column\" separator=\",\">");
-            sql.append("${@com.duorong.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",pv.name)}");
+            sql.append("${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",pv.name)}");
             sql.append("</foreach>");
             sql.append("</when>");
             sql.append("<otherwise>*</otherwise></choose>");
@@ -686,60 +697,61 @@ public final class MybatisBuilder {
             return sql.toString();
 
         }
-        
+
         private String buildInRetrieveSQL(){
-            
+
             StringBuilder buf = new StringBuilder();
-            
+
             buf.append("<select>");
             buf.append("select ");
-            
+
             for (AttributeInfo field : entityFields) {
                 if(field.isQueryable()){
                     buf.append(field.getColumnName()).append(",");
                 }
             }
-            
-            buf.append("from ").append(SQLUtils.resolveTableName(entityClass));
-            buf.append(" where ${@com.duorong.framework.orm.SQLUtils@resolveColumnName(\"").append(entityClass.getName()).append("\",pv.name)} in ");
-            
-            buf.append("<foreach collection='array' item='id' open='(' seperator=',' close=')'>");
+
+            buf.setLength(buf.length() -1);
+            buf.append(" from ").append(SQLUtils.resolveTableName(entityClass));
+            buf.append(" where ${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\"").append(entityClass.getName()).append("\",column)} in ");
+
+            buf.append("<foreach collection='values' item='id' open='(' separator=',' close=')'>");
             buf.append("${id}");
             buf.append("</foreach>");
-            
+
             buf.append("</select>");
-            
-            return buf.toString();      
-            
+
+            return buf.toString();
+
         }
-        
+
         private String buildGetSQL() {
-            
+
             StringBuilder buf = new StringBuilder();
-            
+
             buf.append("<select>");
             buf.append("select ");
-            
+
             for (AttributeInfo field : entityFields) {
                 if (field.isQueryable()) {
                     buf.append(field.getColumnName()).append(",");
                 }
             }
-            
+
             if (entityFields.size() > 0) {
                 buf.setLength(buf.length()-1);
             }
-            
+
             buf.append(" from ");
             buf.append(SQLUtils.resolveTableName(entityClass));
             buf.append(" where id=#{id}");
-            
+
             buf.append("</select>");
-            
-            return buf.toString();      
-            
+
+            return buf.toString();
+
         }
-        
+
         private String buildFindByIdSQL() {
 
             StringBuilder buf1 = new StringBuilder();
@@ -778,45 +790,45 @@ public final class MybatisBuilder {
             return buf.toString();
 
         }
-        
+
         private String buildFindByColumnSQL() {
-            
+
             StringBuilder buf = new StringBuilder();
-            
+
             buf.append("<select>");
             buf.append("select ");
-            
+
             for (AttributeInfo field : entityFields) {
                 if (field.isQueryable()) {
                     buf.append(field.getColumnName()).append(",");
                 }
             }
-            
+
             buf.setLength(buf.length()-1);
-            
+
             buf.append(" from ");
             buf.append(SQLUtils.resolveTableName(entityClass));
             buf.append(" where 1=1 and ");
             buf.append("<foreach collection=\"pvs\" item=\"pv\" ");
             buf.append("index=\"index\" open=\"\" close=\"\" separator=\" and \">");
-            buf.append("${@com.duorong.framework.orm.SQLUtils@resolveColumnName(\"").append(entityClass.getName());
-            buf.append("\",pv.name)}${@com.duorong.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</foreach>");
-            
+            buf.append("${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\"").append(entityClass.getName());
+            buf.append("\",pv.name)}${@org.erhun.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</foreach>");
+
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
                 buf.append(" and deleted='1'");
             }
-            
+
             dialect.getSingleLimitSQL(buf);
             buf.append("</select>");
-            
-            return buf.toString();      
-            
+
+            return buf.toString();
+
         }
-        
+
         private String buildQueryColumnSQL() {
-            
+
             StringBuilder buf = new StringBuilder();
-            
+
             buf.append("<select>");
             buf.append("select");
             buf.append("<choose><when test='fetchColumns!=null'>");
@@ -830,16 +842,16 @@ public final class MybatisBuilder {
             buf.append(" where ");
             buf.append("<foreach collection=\"pvs\" item=\"pv\" open=\"\" close=\"\" separator=\" and \">");
             buf.append("<choose><when test=\"pv.value !=null and (pv.value instanceof java.util.List or pv.value.class.array)\">");
-            buf.append("${@com.duorong.framework.orm.SQLUtils.resolveColumnName(\""+entityClass.getName()+".class\", pv.name)} in ");
+            buf.append("${@org.erhun.framework.orm.SQLUtils.resolveColumnName(\""+entityClass.getName()+".class\", pv.name)} in ");
             buf.append("<foreach collection=\"pv.value\" item=\"v\" open=\"(\" close=\")\" separator=\",\">");
             buf.append("#{v}");
             buf.append("</foreach>");
             buf.append("</when>");
             buf.append("<otherwise>");
-            buf.append("${pv.name}${@com.duorong.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}");
+            buf.append("${pv.name}${@org.erhun.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}");
             buf.append("</otherwise></choose>");
             buf.append("</foreach>");
-            
+
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
                 buf.append(" and deleted='1'");
             }
@@ -847,28 +859,28 @@ public final class MybatisBuilder {
             if(IOrderEntity.class.isAssignableFrom(entityClass)){
                 buf.append("order by show_index");
             }
-            
+
             buf.append("</select>");
-            
-            return buf.toString();      
-            
+
+            return buf.toString();
+
         }
-        
+
         private String buildQueryByColumnSQL() {
-            
+
             StringBuilder buf = new StringBuilder();
-            
+
             buf.append("<select> ");
             buf.append("select <choose> <when test=\"(param1 instanceof String) and (param1 != null and param1 !='')\">${columns}</when><otherwise>");
-            
+
             for (AttributeInfo field : entityFields) {
                 if (field.isQueryable()) {
                     buf.append(field.getColumnName()).append(",");
                 }
             }
-            
+
             buf.setLength(buf.length()-1);
-            
+
             buf.append("</otherwise></choose>");
             buf.append(" from ");
             buf.append(SQLUtils.resolveTableName(entityClass));
@@ -880,21 +892,21 @@ public final class MybatisBuilder {
             buf.append("#{v}");
             buf.append("</foreach>");
             buf.append("</when>");
-            buf.append("<otherwise> ${pv.name}${@com.duorong.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</otherwise></choose>");
+            buf.append("<otherwise> ${pv.name}${@org.erhun.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</otherwise></choose>");
             buf.append("</foreach>");
-            
+
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
                 buf.append(" and deleted='1'");
             }
-            
+
             if(IOrderEntity.class.isAssignableFrom(entityClass)){
                 buf.append("order by show_index");
             }
 
             buf.append("</select>");
-            
-            return buf.toString();      
-            
+
+            return buf.toString();
+
         }
 
         private String buildQueryMetadataSQL() {
@@ -918,11 +930,11 @@ public final class MybatisBuilder {
             return buf.toString();
 
         }
-        
+
         private String buildDuplicateSQL() {
-            
+
             StringBuilder buf = new StringBuilder();
-            
+
             buf.append("<select>");
             buf.append("select count(*) from ").append(SQLUtils.resolveTableName(entityClass));
             buf.append(" where id!=#{id} and ");
@@ -933,21 +945,21 @@ public final class MybatisBuilder {
             buf.append("#{v}");
             buf.append("</foreach>");
             buf.append("</when>");
-            buf.append("<otherwise> ${pv.name}${@com.duorong.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</otherwise></choose>");
+            buf.append("<otherwise> ${pv.name}${@org.erhun.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</otherwise></choose>");
             buf.append("</foreach>");
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
                 buf.append(" and deleted='1'");
             }
             buf.append("</select>");
-            
-            return buf.toString();      
-            
+
+            return buf.toString();
+
         }
-        
+
         private String buildExistSQL() {
-            
+
             StringBuilder buf = new StringBuilder();
-            
+
             buf.append("<select>");
             buf.append("select count(*) from ").append(SQLUtils.resolveTableName(entityClass));
             buf.append("<foreach collection=\"pv\" item=\"pv\" open=\"\" close=\"\" separator=\" and \">");
@@ -957,24 +969,31 @@ public final class MybatisBuilder {
             buf.append("#{v}");
             buf.append("</foreach>");
             buf.append("</when>");
-            buf.append("<otherwise> ${@com.duorong.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",pv.name)}${@com.duorong.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</otherwise></choose>");
+            buf.append("<otherwise> ${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",pv.name)}${@org.erhun.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</otherwise></choose>");
             buf.append("</foreach>");
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
                 buf.append(" and deleted='1'");
             }
             buf.append("</select>");
-            
-            return buf.toString();      
-            
+
+            return buf.toString();
+
         }
-        
+
         private String buildDeleteSQL() {
             if (IVirtualDeleteEntity.class.isAssignableFrom(entityClass)) {
                 return "<update>update " + SQLUtils.resolveTableName(entityClass) + " set deleted='0' where id=#{id}</update>";
             }
             return "<delete>delete from " + SQLUtils.resolveTableName(entityClass) + " where id=#{id}</delete>";
         }
-        
+
+        private String buildDeleteAllSQL() {
+            if (IVirtualDeleteEntity.class.isAssignableFrom(entityClass)) {
+                return "<update>update " + SQLUtils.resolveTableName(entityClass) + " set deleted='0' where id in(#{id})</update>";
+            }
+            return "<delete>delete from " + SQLUtils.resolveTableName(entityClass) + " where id in (#{id})</delete>";
+        }
+
         private String buildDeleteByColumnSQL() {
 
             StringBuilder buf = new StringBuilder();
@@ -988,15 +1007,15 @@ public final class MybatisBuilder {
             buf.append("<choose><when test=\"pvs!=null\">");
             buf.append("<foreach collection=\"pvs\" item=\"pv\" open=\"\" close=\"\" separator=\" and \">");
             buf.append("<choose><when test=\"pv.value !=null and (pv.value instanceof java.util.List or pv.value.class.array)\">");
-            buf.append("${@com.duorong.framework.orm.SQLUtils@resolveColumnName(\"" + entityClass.getName() + "\",pv.name)} in ");
+            buf.append("${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\"" + entityClass.getName() + "\",pv.name)} in ");
             buf.append("<foreach collection=\"pv.value\" item=\"v\" open=\"(\" close=\")\" separator=\",\">");
             buf.append("#{v}");
             buf.append("</foreach>");
             buf.append("</when>");
-            buf.append("<otherwise> ${@com.duorong.framework.orm.SQLUtils@resolveColumnName(\"" + entityClass.getName() + "\",pv.name)}${@com.duorong.framework.orm.SQLUtils@parseCondition(\"" + entityClass.getName() + "\",pv.name,pv.value)}</otherwise></choose>");
+            buf.append("<otherwise> ${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\"" + entityClass.getName() + "\",pv.name)}${@org.erhun.framework.orm.SQLUtils@parseCondition(\"" + entityClass.getName() + "\",pv.name,pv.value)}</otherwise></choose>");
             buf.append("</foreach>");
             buf.append("</when>");
-            buf.append("<otherwise> ${@com.duorong.framework.orm.SQLUtils@resolveColumnName(\"" + entityClass.getName() + "\",pv.name)}=#{pv.value}</otherwise></choose>");
+            buf.append("<otherwise> ${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\"" + entityClass.getName() + "\",pv.name)}=#{pv.value}</otherwise></choose>");
 
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
                 buf.append("</update>");
@@ -1007,39 +1026,39 @@ public final class MybatisBuilder {
             return buf.toString();
 
         }
-        
+
         private String buildRemoveColumnSQL() {
-            
+
             StringBuilder buf = new StringBuilder();
-            
+
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
                 buf.append("<update>update " + SQLUtils.resolveTableName(entityClass) + " set deleted='0' where ");
             }else {
                 buf.append("<delete>");
                 buf.append("delete from ").append(SQLUtils.resolveTableName(entityClass)).append(" where ");
             }
-            
+
             buf.append("<choose><when test=\"pv!=null\">");
             buf.append("<foreach collection=\"pv\" item=\"pv\" open=\"\" close=\"\" separator=\" and \">");
             buf.append("<choose><when test=\"pv.value !=null and (pv.value instanceof java.util.List or pv.value.class.array)\">");
-            buf.append("${@com.duorong.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",pv.name)} in ");
+            buf.append("${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",pv.name)} in ");
             buf.append("<foreach collection=\"pv.value\" item=\"v\" open=\"(\" close=\")\" separator=\",\">");
             buf.append("#{v}");
             buf.append("</foreach>");
             buf.append("</when>");
-            buf.append("<otherwise> ${@com.duorong.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",pv.name)}${@com.duorong.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</otherwise></choose>");
+            buf.append("<otherwise> ${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",pv.name)}${@org.erhun.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</otherwise></choose>");
             buf.append("</foreach>");
             buf.append("</when>");
-            buf.append("<otherwise> ${@com.duorong.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",pv.name)}=#{pv.value}</otherwise></choose>");
-            
+            buf.append("<otherwise> ${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",pv.name)}=#{pv.value}</otherwise></choose>");
+
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
                 buf.append("</update>");
             }else {
                 buf.append("</delete>");
             }
-            
+
             return buf.toString();
-            
+
         }
 
         private String parseJoin(AttributeInfo join, StringBuilder buf1, StringBuilder buf3) {
@@ -1195,7 +1214,7 @@ public final class MybatisBuilder {
             return a;
 
         }
-        
+
         private boolean validField(Field field){
 
             boolean valid = validQueryField(field);
@@ -1210,7 +1229,7 @@ public final class MybatisBuilder {
 
             return true;
         }
-        
+
         private boolean validQueryField(Field field){
 
             if(field.getAnnotation(Ignore.class) != null){
@@ -1228,35 +1247,35 @@ public final class MybatisBuilder {
             if(Modifier.isStatic(field.getModifiers())){
                 return false;
             }
-            
+
             return true;
         }
     }
 
     public static void main(String[] args) throws ClassNotFoundException {
-        
 
-        
+
+
         StringBuilder buf = new StringBuilder();
-        
+
         buf.append("<select>update test set deleted='0' where 1=1 <if test=\"pv!=null or (pv instanceof String and pv!='')\">and bb=111</if></select>");
-        
+
         XPathParser p = new XPathParser(buf.toString());
-        
+
         XNode node = p.evalNode("/select");
-        
+
         Configuration cfg = new Configuration();
-        
+
         XMLScriptBuilder scriptBuilder = new XMLScriptBuilder(cfg, node);
         SqlSource sqlSource = scriptBuilder.parseScriptNode();
-        
+
         Map map = new HashMap();
-        
+
         map.put("pv", new Integer(0));
-        
+
         BoundSql s = sqlSource.getBoundSql(map);
-        
+
         System.out.println(s.getSql());
     }
-    
+
 }

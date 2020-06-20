@@ -3,8 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
-    <groupId>com.erhun.framework</groupId>
+    <groupId>org.erhun.framework</groupId>
     <artifactId>framework</artifactId>
     <packaging>pom</packaging>
     <version>1.0.0</version>
@@ -17,6 +16,7 @@
         <module>framework-domain</module>
         <module>framework-supports</module>
         <module>framework-log</module>
+        <module>framework-rbac</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -90,6 +90,20 @@
             <version>${spring.boot.version}</version>
         </dependency>
     </dependencies>
+    <distributionManagement>
+        <repository>
+            <id>nexus-releases</id>
+            <url>
+                http://192.168.3.206:8081/nexus/repository/maven-releases/
+            </url>
+        </repository>
+        <snapshotRepository>
+            <id>nexus-snapshots</id>
+            <url>
+                http://192.168.3.206:8081/nexus/repository/maven-snapshots/
+            </url>
+        </snapshotRepository>
+    </distributionManagement>
     <build>
         <pluginManagement>
             <plugins>

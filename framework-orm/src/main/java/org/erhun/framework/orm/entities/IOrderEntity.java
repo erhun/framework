@@ -7,8 +7,8 @@ package org.erhun.framework.orm.entities;
  */
 public interface IOrderEntity {
 
-	public Integer getShowIndex();
+	Integer getShowIndex();
 	
-	public void setShowIndex(Integer showIndex);
+	void setShowIndex(Integer showIndex);
 	
 }
