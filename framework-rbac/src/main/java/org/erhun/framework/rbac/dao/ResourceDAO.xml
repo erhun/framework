@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="com.fzs.uniauth.modules.rbac.dao.ResourceDAO">
+    
+    <select id="queryByRoleId" resultMap=".ResourceInfo">
+        select distinct r.id,p.id value,r.name,r.type from uac_resource r left join uac_permission p on p.value=r.id and p.type='resource' and p.role_id in(${roleId}) where r.application_id=#{applicationId} limit #{limit.offset},#{limit.limit}
+    </select>
+    
+    <select id="countByRoleId" resultType="long">
+        select count(distinct r.id) from uac_resource r left join uac_permission p on p.value=r.id and p.type='resource' and p.role_id in(${roleId}) where r.application_id=#{applicationId}
+    </select>
+    
+    <select id="queryByUserId" resultMap=".ResourceInfo">
+        select * from (
+			select
+				 r.*
+			from
+				uac_resource r inner join uac_permission p on p.value=r.id and p.type='resource'
+			where
+				r.application_id=#{applicationId}
+				<if test="resType!=null and resType!=''">
+					and r.type=#{resType}
+				</if>
+				and p.role_id in(
+					 select rg.role_id from uac_group_link_role rg,uac_user_link_group ug where ug.user_id=#{userId} and ug.group_id = rg.group_id
+					 union
+					 select ur.role_id from uac_user_link_role ur where ur.user_id=#{userId}
+				)
+		    union
+			select r.* from uac_resource r where id in(SELECT r.resource_id FROM uac_user_link_resource r WHERE r.user_id = #{userId})
+		) t
+    </select>
+	<select id="queryResourceIdByUserId" resultType="string">
+        select id from (
+			select
+				r.id
+			from
+				uac_resource r inner join uac_permission p on p.value=r.id and p.type='resource'
+			where
+				r.application_id=#{applicationId}
+				<if test="resType!=null and resType!=''">
+					and r.type=#{resType}
+				</if>
+				and p.role_id in(
+					 select rg.role_id from uac_group_link_role rg,uac_user_link_group ug where ug.user_id=#{userId} and ug.group_id = rg.group_id
+					 union
+					 select ur.role_id from uac_user_link_role ur where ur.user_id=#{userId}
+				)
+			union
+			select r.resource_id from uac_user_link_resource r where r.user_id=#{userId}
+		) t
+    </select>
+    
+</mapper>

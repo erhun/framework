@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="com.fzs.uniauth.modules.rbac.dao.AttributeDAO">
+
+    <select id="queryAttributeByRoleIdAndEntityId" resultMap=".AttributeInfo">
+         select distinct a.* from uac_attribute a where a.id in(select t.value from uac_permission t where t.role_id in(${roleId}) and t.type='attribute') and entity_id =${entityId}
+    </select>
+
+</mapper>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="com.fzs.uniauth.modules.rbac.dao.ModuleDAO">
+    
+    <select id="findByCode" resultType="hashmap">
+        select * from uac_module where is_valid='1' and  code=#{0}
+    </select>
+    
+    <select id="queryRootModulesById" resultMap="ModuleInfo">
+        select * from uac_module where is_valid='1' and parent_id='0' and id in (${0}) and type=#{1} order by show_index
+    </select>
+    
+    <select id="queryRootModules" resultMap="ModuleInfo">
+        return select id,smpalias,parent_id from uac_module where is_valid='1' and  parent_id='0' or tb.parent is null order by show_index
+    </select>
+    
+    <select id="queryByType" resultMap="ModuleInfo">
+        select * from uac_module where is_valid='1' and type=#{0} order by show_index
+    </select>
+    
+    <select id="queryByIdAndType" resultType="hashmap">
+        select * from uac_module where id in (${0}) and type=#{1} and is_valid='1' order by show_index
+    </select>
+
+    <select id="queryByRoleId" resultMap=".ModuleInfo">
+       select
+			m.*
+       from
+			uac_module m
+       where
+       		m.is_valid='1'
+            and m.application_id=#{applicationId}
+       		and m.id in(select r.value from uac_permission r where r.permission>'0' and r.type='module' and r.role_id in(${roleId}))
+		    <if test="moduleType!=null">
+				and m.type=#{moduleType}
+		    </if>
+	   order by m.show_index
+    </select>
+
+</mapper>
