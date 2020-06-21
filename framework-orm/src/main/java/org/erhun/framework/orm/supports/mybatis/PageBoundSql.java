@@ -26,10 +26,12 @@ public class PageBoundSql extends BoundSql {
 
     private List<ParameterMapping> parameterMappings;
 
+    private BoundSql boundSql;
+
     public PageBoundSql(Configuration configuration, BoundSql boundSql){
         super(configuration, boundSql.getSql(), boundSql.getParameterMappings(), boundSql.getParameterObject());
-
-        parameterMappings = new ArrayList<>(super.getParameterMappings());
+        this.boundSql = boundSql;
+        this.parameterMappings = new ArrayList<>(super.getParameterMappings());
 
         int size = parameterMappings.size();
 
@@ -95,5 +97,20 @@ public class PageBoundSql extends BoundSql {
     @Override
     public List<ParameterMapping> getParameterMappings() {
         return parameterMappings;
+    }
+
+    @Override
+    public boolean hasAdditionalParameter(String name) {
+        return boundSql.hasAdditionalParameter(name);
+    }
+
+    @Override
+    public void setAdditionalParameter(String name, Object value) {
+        boundSql.setAdditionalParameter(name, value);
+    }
+
+    @Override
+    public Object getAdditionalParameter(String name) {
+        return boundSql.getAdditionalParameter(name);
     }
 }

@@ -8,18 +8,18 @@ import java.util.List;
  */
 public class PageResultImpl<E> implements PageResult {
 
-    private long maxRecords;
+    private long totalRecords;
 
     private List<E> data;
 
-    public PageResultImpl(long maxRecords, List<E> data) {
-        this.maxRecords = maxRecords;
+    public PageResultImpl(long totalRecords, List<E> data) {
+        this.totalRecords = totalRecords;
         this.data = data;
     }
 
     @Override
-    public long getMaxRecords() {
-        return maxRecords;
+    public long getTotalRecords() {
+        return totalRecords;
     }
 
     @Override

@@ -288,10 +288,10 @@ public class Conditional implements Criteria{
             this.value = value;
             this.expression = expression;
         }
-        @Override
+        /*@Override
         public String toString() {
             return columnName + " like '#{cc.value}'";
-        }
+        }*/
     }
 
 }

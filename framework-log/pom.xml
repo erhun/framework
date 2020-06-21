@@ -13,7 +13,7 @@
     <version>1.0.0</version>
     <dependencies>
         <dependency>
-            <groupId>com.erhun.framework</groupId>
+            <groupId>org.erhun.framework</groupId>
             <artifactId>framework-basic</artifactId>
             <version>1.0.0</version>
         </dependency>

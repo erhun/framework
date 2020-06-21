@@ -17,6 +17,7 @@ import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
+import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Method;
 import java.sql.SQLException;
@@ -86,16 +87,16 @@ public class ExecutorProxy implements Executor {
     }
 
     private <E> List<E> queryByPage(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
-        long maxRecords = 0;
+        long totalRecords = 0;
         PageBoundSql pageBoundSql = new PageBoundSql(ms.getConfiguration(), boundSql);
         List <E> dataList = delegate.<E> query(ms, parameterObject, rowBounds, resultHandler, key, pageBoundSql);
         if(countable(parameterObject)) {
             List<Long> countList = executeCount(ms, parameterObject, rowBounds, boundSql);
-            maxRecords = countList.get(0);
+            totalRecords = countList.get(0);
         }else{
-            maxRecords = dataList.size();
+            totalRecords = dataList.size();
         }
-        return (List<E>) Arrays.asList(new PageResultImpl(maxRecords, dataList));
+        return (List<E>) Arrays.asList(new PageResultImpl(totalRecords, dataList));
     }
 
     private List<Long> executeCount(MappedStatement ms, Object parameterObject, RowBounds rowBounds, BoundSql boundSql) throws SQLException {
@@ -123,7 +124,7 @@ public class ExecutorProxy implements Executor {
                 Object lm = tmp.get("limit");
                 if(lm instanceof Limits){
                     Limits limits = (Limits) lm;
-                    int pageSize = ConvertUtils.toInt(tmp.get("pageSize"), 20);
+                    int pageSize = ConvertUtils.toInt(limits.getSize(), 20);
                     if(limits.getOffset() == 0 && pageSize < limits.getSize()){
                         return false;
                     }
@@ -145,10 +146,8 @@ public class ExecutorProxy implements Executor {
 
         String className = id.substring(0, idx);
         String methodName = id.substring(idx + 1);
-
         Class clazz = getClass(className);
-
-        Method[] methods = clazz.getDeclaredMethods();
+        Method[] methods = ReflectionUtils.getAllDeclaredMethods(clazz);;
         for (Method method : methods) {
             if(methodName.equals(method.getName()) && PageResult.class.isAssignableFrom(method.getReturnType())){
                 pageStatements.put(id, Boolean.TRUE);

@@ -10,6 +10,7 @@ import org.erhun.framework.orm.annotations.*;
 import org.erhun.framework.orm.dialect.Dialect;
 import org.erhun.framework.orm.dialect.MySQLDialect;
 import org.erhun.framework.orm.dialect.OracleDialect;
+import org.erhun.framework.orm.entities.IEntity;
 import org.erhun.framework.orm.entities.IOrderEntity;
 import org.erhun.framework.orm.entities.IVirtualDeleteEntity;
 import org.apache.ibatis.executor.keygen.Jdbc3KeyGenerator;
@@ -434,7 +435,7 @@ public final class MybatisBuilder {
 
         private String buildUpdateColumnSQL() {
 
-            return "<update>update " + SQLUtils.resolveTableName(entityClass) + " set ${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\", name)}=#{value} where id=#{id}</update>";
+            return "<update>update " + SQLUtils.resolveTableName(entityClass) + " set ${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\", column)}=#{value} where id=#{id}</update>";
 
         }
 
@@ -540,9 +541,24 @@ public final class MybatisBuilder {
             buf.append(" from ");
             buf.append(SQLUtils.resolveTableName(entityClass)).append(" ").append(masterAlias);
             buf.append(" where ");
+
             if (IVirtualDeleteEntity.class.isAssignableFrom(entityClass)) {
                 buf.append("(");
             }
+
+            buildCriteriaConditions(buf);
+
+            if (IVirtualDeleteEntity.class.isAssignableFrom(entityClass)) {
+                buf.append(") and is_deleted='1'");
+            }
+
+            buf.append(" ${criteria.criteria.groupBy} ");
+            buf.append(" ${criteria.criteria.orderBy} ");
+            //buf.append(" ${criteria.criteria.limit} ");
+            //buf.append(" ${criteria.criteria.forUpdate} ");
+        }
+
+        private void buildCriteriaConditions(StringBuilder buf) {
             buf.append("<foreach collection=\"criteria.criteria.conditions()\" item=\"cc\" open=\"\" close=\"\" separator=\"\">");
             buf.append("<choose><when test=\"cc instanceof String\">${cc}</when>");
             buf.append("<otherwise>");
@@ -558,13 +574,6 @@ public final class MybatisBuilder {
             buf.append("</otherwise></choose>");
             buf.append("</otherwise></choose>");
             buf.append("</foreach>");
-
-            if (IVirtualDeleteEntity.class.isAssignableFrom(entityClass)) {
-                buf.append(") and deleted='1'");
-            }
-
-            buf.append(" ${criteria.criteria.groupBy} ");
-            buf.append(" ${criteria.criteria.orderBy} ");
         }
 
         private StringBuilder buildQueryPageSelectiveBody(StringBuilder select){
@@ -574,27 +583,11 @@ public final class MybatisBuilder {
 
             Set<String> overrideNames = new HashSet<String>(2);
 
-            /*if(attributeOverrides != null){
-                Map <String, Join> joins = findJoinOverrides(attributeOverrides.annotations());
-                if(joins != null){
-                    for (Map.Entry<String, Join> entry : joins.entrySet()) {
-                        Field field = ReflectionUtility.findField(entityFields, entry.getKey());
-                        if(field == null) {
-                            throw new IllegalArgumentException(String.format("AnnotationAttributes [%s] is not exists.", field.getName()));
-                        }
-                        overrideNames.add(field.getName());
-                        parseJoin(entry.getValue(), select, from, field);
-                    }
-                }
-            }*/
-
             for (AttributeInfo field : entityFields) {
 
                 if(!field.isQueryable() || overrideNames.contains(field.getFieldName())){
                     continue;
                 }
-
-                //Join join = field.getAnnotation(Join.class);
 
                 String item = field.getItem();
                 String columnName = field.getColumnName();
@@ -627,12 +620,19 @@ public final class MybatisBuilder {
                 condition.append("</if>");
             }
 
+            condition.append("<if test=\"param3!=null and param3 instanceof org.erhun.framework.orm.Criteria\">");
+            condition.append( " and (" );
+            buildCriteriaConditions(condition);
+            condition.append(")");
+            condition.append("</if>");
+
+
             select.setLength(select.length() -1);
             select.append(" from ").append(SQLUtils.resolveTableName(entityClass)).append(" t").append(from).append(" where 1=1 ").append(condition);
 
-            /*if(IValidEntity.class.isAssignableFrom(entityClass)){
-                buf1.append(" and t.deleted='1'");
-            }*/
+            if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
+                select.append(" and t.is_deleted='1'");
+            }
 
             return select;
         }
@@ -676,7 +676,7 @@ public final class MybatisBuilder {
                 }
             }
 
-            dialect.getLimitSQL(sql);
+            //dialect.getLimitSQL(sql);
 
             sql.insert(0, "<select>");
             sql.append(") t");
@@ -815,7 +815,7 @@ public final class MybatisBuilder {
             buf.append("\",pv.name)}${@org.erhun.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</foreach>");
 
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
-                buf.append(" and deleted='1'");
+                buf.append(" and is_deleted='1'");
             }
 
             dialect.getSingleLimitSQL(buf);
@@ -853,7 +853,7 @@ public final class MybatisBuilder {
             buf.append("</foreach>");
 
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
-                buf.append(" and deleted='1'");
+                buf.append(" and is_deleted='1'");
             }
 
             if(IOrderEntity.class.isAssignableFrom(entityClass)){
@@ -870,8 +870,10 @@ public final class MybatisBuilder {
 
             StringBuilder buf = new StringBuilder();
 
+
+
             buf.append("<select> ");
-            buf.append("select <choose> <when test=\"(param1 instanceof String) and (param1 != null and param1 !='')\">${columns}</when><otherwise>");
+            buf.append("select <choose> <when test=\"(param1 instanceof String) and (param1 != null and param1 !='')\">${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",columns)}</when><otherwise>");
 
             for (AttributeInfo field : entityFields) {
                 if (field.isQueryable()) {
@@ -896,7 +898,7 @@ public final class MybatisBuilder {
             buf.append("</foreach>");
 
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
-                buf.append(" and deleted='1'");
+                buf.append(" and is_deleted='1'");
             }
 
             if(IOrderEntity.class.isAssignableFrom(entityClass)){
@@ -948,7 +950,7 @@ public final class MybatisBuilder {
             buf.append("<otherwise> ${pv.name}${@org.erhun.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</otherwise></choose>");
             buf.append("</foreach>");
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
-                buf.append(" and deleted='1'");
+                buf.append(" and is_deleted='1'");
             }
             buf.append("</select>");
 
@@ -972,7 +974,7 @@ public final class MybatisBuilder {
             buf.append("<otherwise> ${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",pv.name)}${@org.erhun.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</otherwise></choose>");
             buf.append("</foreach>");
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
-                buf.append(" and deleted='1'");
+                buf.append(" and is_deleted='1'");
             }
             buf.append("</select>");
 
@@ -982,14 +984,14 @@ public final class MybatisBuilder {
 
         private String buildDeleteSQL() {
             if (IVirtualDeleteEntity.class.isAssignableFrom(entityClass)) {
-                return "<update>update " + SQLUtils.resolveTableName(entityClass) + " set deleted='0' where id=#{id}</update>";
+                return "<update>update " + SQLUtils.resolveTableName(entityClass) + " set is_deleted='0' where id=#{id}</update>";
             }
             return "<delete>delete from " + SQLUtils.resolveTableName(entityClass) + " where id=#{id}</delete>";
         }
 
         private String buildDeleteAllSQL() {
             if (IVirtualDeleteEntity.class.isAssignableFrom(entityClass)) {
-                return "<update>update " + SQLUtils.resolveTableName(entityClass) + " set deleted='0' where id in(#{id})</update>";
+                return "<update>update " + SQLUtils.resolveTableName(entityClass) + " set is_deleted='0' where id in(#{id})</update>";
             }
             return "<delete>delete from " + SQLUtils.resolveTableName(entityClass) + " where id in (#{id})</delete>";
         }
@@ -999,7 +1001,7 @@ public final class MybatisBuilder {
             StringBuilder buf = new StringBuilder();
 
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
-                buf.append("<update>update ").append(SQLUtils.resolveTableName(entityClass)).append(" set deleted=1 ").append(" where ");
+                buf.append("<update>update ").append(SQLUtils.resolveTableName(entityClass)).append(" set is_deleted=1 ").append(" where ");
             }else {
                 buf.append("<delete>delete from ").append(SQLUtils.resolveTableName(entityClass)).append(" where ");
             }
@@ -1032,7 +1034,7 @@ public final class MybatisBuilder {
             StringBuilder buf = new StringBuilder();
 
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
-                buf.append("<update>update " + SQLUtils.resolveTableName(entityClass) + " set deleted='0' where ");
+                buf.append("<update>update " + SQLUtils.resolveTableName(entityClass) + " set is_deleted='0' where ");
             }else {
                 buf.append("<delete>");
                 buf.append("delete from ").append(SQLUtils.resolveTableName(entityClass)).append(" where ");
@@ -1258,7 +1260,7 @@ public final class MybatisBuilder {
 
         StringBuilder buf = new StringBuilder();
 
-        buf.append("<select>update test set deleted='0' where 1=1 <if test=\"pv!=null or (pv instanceof String and pv!='')\">and bb=111</if></select>");
+        buf.append("<select>update test set is_deleted='0' where 1=1 <if test=\"pv!=null or (pv instanceof String and pv!='')\">and bb=111</if></select>");
 
         XPathParser p = new XPathParser(buf.toString());
 

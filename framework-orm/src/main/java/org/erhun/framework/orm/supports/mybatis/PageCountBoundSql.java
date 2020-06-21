@@ -10,8 +10,11 @@ import org.apache.ibatis.session.Configuration;
  */
 public class PageCountBoundSql extends BoundSql {
 
+    private BoundSql boundSql;
+
     public PageCountBoundSql(Configuration configuration, BoundSql boundSql){
         super(configuration, boundSql.getSql(), boundSql.getParameterMappings(), boundSql.getParameterObject());
+        this.boundSql = boundSql;
     }
 
     @Override
@@ -20,4 +23,18 @@ public class PageCountBoundSql extends BoundSql {
         return SQLUtils.getDialect().getLimitCountSql(sql);
     }
 
+    @Override
+    public boolean hasAdditionalParameter(String name) {
+        return boundSql.hasAdditionalParameter(name);
+    }
+
+    @Override
+    public void setAdditionalParameter(String name, Object value) {
+        boundSql.setAdditionalParameter(name, value);
+    }
+
+    @Override
+    public Object getAdditionalParameter(String name) {
+        return boundSql.getAdditionalParameter(name);
+    }
 }

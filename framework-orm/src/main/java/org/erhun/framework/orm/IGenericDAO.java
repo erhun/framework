@@ -1,6 +1,7 @@
 package org.erhun.framework.orm;
 
 import org.erhun.framework.basic.utils.PV;
+import org.erhun.framework.basic.utils.PageResult;
 import org.erhun.framework.orm.entities.IEntity;
 import org.apache.ibatis.annotations.Param;
 
@@ -99,8 +100,17 @@ public interface IGenericDAO<Id extends Serializable, E extends IEntity>{
 	 * @param limit
 	 * @return
 	 */
-	List <E> queryByPage(@Param("entity") QueryParam entity, @Param("fetchColumns") String fetchColumns[], @Param("limit") Limits limit);
+	PageResult <E> queryByPage(@Param("entity") QueryParam entity, @Param("fetchColumns") String fetchColumns[], @Param("limit") Limits limit);
 
+	/**
+	 *
+	 * @param entity
+	 * @param fetchColumns
+	 * @param criteria
+	 * @param limit
+	 * @return
+	 */
+	PageResult <E> queryByPage(@Param("entity") QueryParam entity, @Param("fetchColumns") String fetchColumns[], @Param("criteria") Criteria criteria, @Param("limit") Limits limit);
 	/**
 	 * 根据queryParam查询记录并返回指定列
 	 * @param queryParam
@@ -191,5 +201,13 @@ public interface IGenericDAO<Id extends Serializable, E extends IEntity>{
      * @return
      */
     List <E> in(@Param("column") String column, @Param("values") Serializable... values);
+
+	/**
+	 *
+	 * @param column The column name
+	 * @param values
+	 * @return
+	 */
+	List <E> in(@Param("column") String column, @Param("values") Object [] values);
 
 }

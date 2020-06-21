@@ -2,6 +2,7 @@ package org.erhun.framework.domain.services;
 
 import org.apache.ibatis.annotations.Param;
 import org.erhun.framework.basic.utils.PV;
+import org.erhun.framework.basic.utils.PageResult;
 import org.erhun.framework.basic.utils.ResultPack;
 import org.erhun.framework.basic.utils.generics.GenericsUtils;
 import org.erhun.framework.basic.utils.reflection.ReflectionUtils;
@@ -225,17 +226,9 @@ public abstract class AbstractBusinessService<Id extends Serializable, E extends
             pageSize = 20;
         }
 
-        convertColumnName(entityClass, fetchFields);
+        PageResult result = baseDao.queryByPage(queryParam, fetchFields, Limits.of(pageNo, pageSize));
 
-        List <E> list = baseDao.queryByPage(queryParam, fetchFields, Limits.of(pageNo, pageSize));
-
-        long totalRecords = 0;
-
-        if(pageNo > 1 || pageNo == 1 && list.size() == pageSize) {
-            totalRecords = baseDao.countByPage(queryParam);
-        }
-
-        return ResultPack.result(totalRecords, list);
+        return ResultPack.result(result.getTotalRecords(), result.getData());
     }
 
     @Override
@@ -253,32 +246,11 @@ public abstract class AbstractBusinessService<Id extends Serializable, E extends
         if(pageSize == null){
             pageSize = 20;
         }
-        convertColumnName(queryParam.getClass(), fetchFields);
         return baseDao.queryMetadata(queryParam, fetchFields, Limits.of(pageNo, pageSize));
     }
 
     protected boolean duplicate(String id, String fieldName, String value) {
         return baseDao.duplicate(id, PV.nv(fieldName, value)) > 0;
-    }
-
-    private String convertColumnName(Class entityClass, String field) {
-        Field fd = ReflectionUtils.findField(entityClass, field);
-        if(field == null) {
-            throw new IllegalArgumentException(fd.getName() + " no find.");
-        }
-        return SQLUtils.resolveColumnName(entityClass, fd);
-    }
-
-    private void convertColumnName(Class entityClass, String[] fields) {
-        if(fields != null && fields.length > 0){
-            for (int i = 0; i < fields.length; i++) {
-                Field field = ReflectionUtils.findField(entityClass, fields[i]);
-                if(field == null) {
-                    throw new IllegalArgumentException(field.getName() + " no find.");
-                }
-                fields[i] = SQLUtils.resolveColumnName(entityClass, field);
-            }
-        }
     }
 
     @Override

@@ -2,6 +2,8 @@ package org.erhun.framework.orm;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.erhun.framework.basic.utils.PV;
+import org.erhun.framework.basic.utils.PageResult;
 import org.erhun.framework.basic.utils.json.JsonUtils;
 import org.erhun.framework.orm.test.dao.TestDAO;
 import org.erhun.framework.orm.test.entities.TestEntity;
@@ -96,6 +98,26 @@ public class OrmTestCase {
     }
 
     @Test
+    public void testIn() {
+        testDao.queryByColumn( PV.of("id", 1));
+    }
+
+    @Test
+    public void testQueryByPage() {
+
+        QueryParam queryParam = new QueryParam();
+        //queryParam.put("id", 1);
+
+        Object obj = testDao.queryByCriteria(Criteria.fetch().in(TestEntity::getId, 1,2,3));
+
+       PageResult re = testDao.queryByPage( queryParam, null, Limits.of(1, 10));
+        PageResult r2 = testDao.queryByPage( queryParam, null, Criteria.fetch().eq(TestEntity::getId, 2), Limits.of(1, 10));
+
+
+        //System.out.println(JsonUtils.toJSONString(re));
+    }
+
+    @Test
     public void testCriteria() {
 
         TestEntity testInfo = testDao.get(1L);
@@ -104,7 +126,7 @@ public class OrmTestCase {
 
         System.out.println(JsonUtils.toJSONString(testInfo));
 
-        testInfo = testDao.findByCriteria(Criteria.fetch(TestEntity::getText).eq(TestEntity::getText, "test1"));
+        testInfo = testDao.findByCriteria(Criteria.fetch(TestEntity::getText).eq(TestEntity::getId, 1));
 
         Assert.assertTrue(testInfo != null);
 

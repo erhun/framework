@@ -9,10 +9,10 @@ public interface PageResult<E>{
 
 
     /**
-     * 最大记录数
+     * 总记录数
      * @return
      */
-    long getMaxRecords();
+    long getTotalRecords();
 
     /**
      * 数据记录

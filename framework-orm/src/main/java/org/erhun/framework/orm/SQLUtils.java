@@ -258,8 +258,26 @@ public class SQLUtils {
      * @return
      */
     public static String resolveColumnName(Class clazz, String fieldName) {
-        Field field = ReflectionUtils.findField(clazz, fieldName);
-        return resolveColumnName(clazz, field);
+
+        StringBuilder buf = new StringBuilder();
+
+        String names [] = fieldName.split(",");
+
+        for (String tmp : names) {
+            if(buf.length() > 0){
+                buf.append(",");
+            }
+            Field field = ReflectionUtils.findField(clazz, tmp);
+            if(field == null){
+                buf.append(tmp);
+                continue;
+            }
+            String columnName = resolveColumnName(clazz, field);
+            buf.append(columnName);
+        }
+
+        return buf.toString();
+
     }
 
     /**
@@ -271,6 +289,9 @@ public class SQLUtils {
     public static String resolveColumnName(String className, String fieldName) {
         Class clazz = ClassUtils.getClass(className);
         Field field = ReflectionUtils.findField(clazz, fieldName);
+        if(field == null){
+            return fieldName;
+        }
         return resolveColumnName(clazz, field);
     }
 

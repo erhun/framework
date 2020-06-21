@@ -4,10 +4,9 @@ import org.erhun.framework.orm.dialect.Dialect;
 import org.erhun.framework.orm.dialect.MySQLDialect;
 import org.erhun.framework.orm.dialect.OracleDialect;
 import org.erhun.framework.orm.supports.mybatis.MybatisMappedStatementRegistry;
-import org.erhun.framework.orm.supports.mybatis.config.MybatisConfigurationImpl;
-import org.mybatis.spring.mapper.MapperScannerConfigurer;
+import org.erhun.framework.orm.supports.mybatis.PageInterceptor;
+import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -31,16 +30,19 @@ public class OrmConfigurer {
 	}
 
 	@Bean
-	public org.apache.ibatis.session.Configuration mybatisConfiguration(){
-		org.apache.ibatis.session.Configuration configuration = new MybatisConfigurationImpl();
-		configuration.setMapUnderscoreToCamelCase(true);
-		return configuration;
-	}
-
-	@Bean
 	public MybatisMappedStatementRegistry mybatisMappedStatementRegistry(){
 		MybatisMappedStatementRegistry mmsr = new MybatisMappedStatementRegistry();
 		return mmsr;
+	}
+
+	@Bean
+	public ConfigurationCustomizer configurationCustomizer(){
+		return new ConfigurationCustomizer(){
+			@Override
+			public void customize(org.apache.ibatis.session.Configuration configuration) {
+				configuration.addInterceptor(new PageInterceptor());
+			}
+		};
 	}
 
 }
