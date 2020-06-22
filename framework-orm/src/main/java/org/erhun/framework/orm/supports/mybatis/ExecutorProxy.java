@@ -90,13 +90,13 @@ public class ExecutorProxy implements Executor {
         long totalRecords = 0;
         PageBoundSql pageBoundSql = new PageBoundSql(ms.getConfiguration(), boundSql);
         List <E> dataList = delegate.<E> query(ms, parameterObject, rowBounds, resultHandler, key, pageBoundSql);
-        if(countable(parameterObject)) {
+        if(countable(ms, parameterObject)) {
             List<Long> countList = executeCount(ms, parameterObject, rowBounds, boundSql);
             totalRecords = countList.get(0);
         }else{
             totalRecords = dataList.size();
         }
-        return (List<E>) Arrays.asList(new PageResultImpl(totalRecords, dataList));
+        return (List<E>) Arrays.asList(new PageResultImpl(totalRecords, pageBoundSql.getPageSize(), dataList));
     }
 
     private List<Long> executeCount(MappedStatement ms, Object parameterObject, RowBounds rowBounds, BoundSql boundSql) throws SQLException {
@@ -117,7 +117,10 @@ public class ExecutorProxy implements Executor {
         return delegate.query(countMappedStatement, parameterObject, rowBounds, null, null, pageCountBoundSql);
     }
 
-    private boolean countable(Object parameterObject) {
+    private boolean countable(MappedStatement ms, Object parameterObject) {
+        if(ms.getId().endsWith(".queryByNextPage")){
+            return false;
+        }
         if(parameterObject instanceof Map){
             Map tmp = (Map) parameterObject;
             if(tmp != null){

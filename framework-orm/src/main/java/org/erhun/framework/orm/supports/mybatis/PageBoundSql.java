@@ -24,6 +24,10 @@ public class PageBoundSql extends BoundSql {
 
     private final static String limitKey = "#{limit.limit}";
 
+    private long pageNo;
+
+    private int pageSize;
+
     private List<ParameterMapping> parameterMappings;
 
     private BoundSql boundSql;
@@ -43,14 +47,19 @@ public class PageBoundSql extends BoundSql {
 
         if(parameterObject instanceof Map){
             Map tmp = ((Map) parameterObject);
-            if(!tmp.containsKey("limit") && tmp.containsKey("pageNo")){
+            Limits limits = (Limits) tmp.get("limit");
+            if(limits == null && tmp.containsKey("pageNo")){
                 Integer pageNo = ConvertUtils.toInt(tmp.get("pageNo"), 1);
                 Integer pageSize = ConvertUtils.toInt(tmp.get("pageSize"), 0);
                 if(pageSize < 1 || pageSize > 100){
                     pageSize = 20;
-                    // ContextHolder.get().symbolValue("${beehive.pagination.page_size}", 20);
                 }
+                this.pageNo = pageNo;
+                this.pageSize = pageSize;
                 tmp.put("limit", Limits.of(pageNo, pageSize));
+            }else{
+                this.pageNo = limits.getOffset();
+                this.pageSize = limits.getSize();
             }
         }
 
@@ -92,6 +101,14 @@ public class PageBoundSql extends BoundSql {
     public String getPageCountSql() {
         StringBuilder sql = new StringBuilder(super.getSql());
         return SQLUtils.getDialect().getLimitCountSql(sql);
+    }
+
+    public long getPageNo() {
+        return pageNo;
+    }
+
+    public int getPageSize() {
+        return pageSize;
     }
 
     @Override

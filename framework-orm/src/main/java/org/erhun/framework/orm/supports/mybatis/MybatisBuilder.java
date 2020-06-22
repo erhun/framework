@@ -98,6 +98,7 @@ public final class MybatisBuilder {
             buildQueryColumnMappedStatement();
             buildQueryMetadataMappedStatement();
             buildQueryByPageMappedStatement();
+            buildQueryByNextPageMappedStatement();
             buildCountByPageMappedStatement();
             buildInRetriveMappedStatement();
         }
@@ -223,6 +224,11 @@ public final class MybatisBuilder {
 
         private void buildQueryByPageMappedStatement() {
             String statement = daoClass.getName() + ".queryByPage";
+            addMappedStatement(configuration, statement, buildQueryByPageSQL(), SqlCommandType.SELECT, resultMaps, null);
+        }
+
+        private void buildQueryByNextPageMappedStatement() {
+            String statement = daoClass.getName() + ".queryByNextPage";
             addMappedStatement(configuration, statement, buildQueryByPageSQL(), SqlCommandType.SELECT, resultMaps, null);
         }
 

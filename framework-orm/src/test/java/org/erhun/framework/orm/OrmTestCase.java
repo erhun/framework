@@ -106,13 +106,23 @@ public class OrmTestCase {
     public void testQueryByPage() {
 
         QueryParam queryParam = new QueryParam();
-        //queryParam.put("id", 1);
-
-        Object obj = testDao.queryByCriteria(Criteria.fetch().in(TestEntity::getId, 1,2,3));
 
        PageResult re = testDao.queryByPage( queryParam, null, Limits.of(1, 10));
         PageResult r2 = testDao.queryByPage( queryParam, null, Criteria.fetch().eq(TestEntity::getId, 2), Limits.of(1, 10));
 
+
+        //System.out.println(JsonUtils.toJSONString(re));
+    }
+
+    @Test
+    public void testQueryByNextPage() {
+
+        QueryParam queryParam = new QueryParam();
+
+        PageResult re1 = testDao.queryByPage( queryParam, null, Limits.of(1, 10));
+        PageResult re2 = testDao.queryByNextPage(queryParam, null, Limits.of(1, 10));
+
+        System.out.println(re2.hasNextPage());
 
         //System.out.println(JsonUtils.toJSONString(re));
     }

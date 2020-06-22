@@ -111,6 +111,27 @@ public interface IGenericDAO<Id extends Serializable, E extends IEntity>{
 	 * @return
 	 */
 	PageResult <E> queryByPage(@Param("entity") QueryParam entity, @Param("fetchColumns") String fetchColumns[], @Param("criteria") Criteria criteria, @Param("limit") Limits limit);
+
+	/**
+	 * 根据queryParam查询记录并返回指定列，不执行统计条类语句
+	 * @param entity
+	 * @param fetchColumns
+	 * @param limit
+	 * @return
+	 */
+	PageResult <E> queryByNextPage(@Param("entity") QueryParam entity, @Param("fetchColumns") String fetchColumns[], @Param("limit") Limits limit);
+
+
+	/**
+	 * 根据queryParam查询记录并返回指定列，不执行统计条类语句
+	 * @param entity
+	 * @param fetchColumns
+	 * @param criteria
+	 * @param limit
+	 * @return
+	 */
+	PageResult <E> queryByNextPage(@Param("entity") QueryParam entity, @Param("fetchColumns") String fetchColumns[], @Param("criteria") Criteria criteria, @Param("limit") Limits limit);
+
 	/**
 	 * 根据queryParam查询记录并返回指定列
 	 * @param queryParam

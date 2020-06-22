@@ -15,6 +15,12 @@ public interface PageResult<E>{
     long getTotalRecords();
 
     /**
+     * 是否包含下一页(用于下一页)
+     * @return
+     */
+    boolean hasNextPage();
+
+    /**
      * 数据记录
      * @return
      */
