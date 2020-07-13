@@ -5,7 +5,6 @@ import org.erhun.framework.basic.utils.PV;
 import org.erhun.framework.basic.utils.PageResult;
 import org.erhun.framework.basic.utils.ResultPack;
 import org.erhun.framework.basic.utils.generics.GenericsUtils;
-import org.erhun.framework.basic.utils.reflection.ReflectionUtils;
 import org.erhun.framework.basic.utils.string.StringUtils;
 import org.erhun.framework.basic.utils.uuid.ObjectId;
 import org.erhun.framework.domain.dao.BaseDAO;
@@ -23,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PreDestroy;
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.List;
 
@@ -144,20 +142,7 @@ public abstract class AbstractBusinessService<Id extends Serializable, E extends
     @Override
     @Transactional
     public E update(E entity, String ...affectives) throws BusinessException {
-
-        PV pvs [] = new PV[affectives.length];
-
-        for (int i = 0; i < affectives.length; i++) {
-            String name = affectives[i];
-            Field field = ReflectionUtils.field(entity.getClass(), name);
-            if(field == null) {
-                throw new BusinessException("can't find affective attribute '" + name + "'");
-            }
-            pvs[i] = PV.nv(field.getName(), SQLUtils.resolveColumnName(entityClass, field));
-        }
-
-        baseDao.update(entity, pvs);
-
+        baseDao.update(entity, affectives);
         return entity;
     }
 
@@ -229,6 +214,34 @@ public abstract class AbstractBusinessService<Id extends Serializable, E extends
         PageResult result = baseDao.queryByPage(queryParam, fetchFields, Limits.of(pageNo, pageSize));
 
         return ResultPack.result(result.getTotalRecords(), result.getData());
+    }
+
+    @Override
+    public ResultPack queryByPage(QueryParam queryParam, String[] fetchFields, Criteria criteria) {
+        Integer pageNo = queryParam.getPageNo();
+        Integer pageSize = queryParam.getPageSize();
+
+        if(pageNo == null || pageNo < 1){
+            pageNo = 1;
+        }
+
+        if(pageSize == null){
+            pageSize = 20;
+        }
+
+        PageResult result = baseDao.queryByPage(queryParam, fetchFields, criteria, Limits.of(pageNo, pageSize));
+
+        return ResultPack.result(result.getTotalRecords(), result.getData());
+    }
+
+    @Override
+    public PageResult<E> queryByNextPage(QueryParam entity, String[] fetchColumns, Limits limit) {
+        return baseDao.queryByNextPage(entity, fetchColumns, limit);
+    }
+
+    @Override
+    public PageResult<E> queryByNextPage(QueryParam entity, String[] fetchColumns, Criteria criteria, Limits limit) {
+        return baseDao.queryByNextPage(entity, fetchColumns, criteria, limit);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package org.erhun.framework.domain;
 
+import org.erhun.framework.domain.spring.exception.ExtensionHandlerExceptionResolver;
 import org.erhun.framework.domain.spring.resolvers.QueryParamHandlerMethodArgumentResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,4 +25,15 @@ public class DomainConfigurer {
         requestMappingHandlerAdapter.setArgumentResolvers(resolvers);
         return requestMappingHandlerAdapter;
     }
+
+    @Bean
+    public QueryParamHandlerMethodArgumentResolver queryParamHandlerMethodArgumentResolver(){
+        return new QueryParamHandlerMethodArgumentResolver();
+    }
+
+    @Bean
+    public ExtensionHandlerExceptionResolver extensionHandlerExceptionResolver(){
+        return new ExtensionHandlerExceptionResolver();
+    }
+
 }

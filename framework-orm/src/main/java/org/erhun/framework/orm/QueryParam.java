@@ -104,9 +104,9 @@ public class QueryParam <E extends BaseDTO> extends HashMap <String, Object> {
                 @Override
                 public void doWith(Field field) throws IllegalArgumentException, IllegalAccessException {
                     if (!Modifier.isStatic(field.getModifiers())
-                            || !Modifier.isFinal(field.getModifiers())
-                            || field.getAnnotation(Ignore.class) == null
-                            || !field.getName().startsWith("CGLIB")) {
+                            && !Modifier.isFinal(field.getModifiers())
+                            && field.getAnnotation(Ignore.class) == null
+                            && !field.getName().startsWith("CGLIB")) {
                         field.setAccessible(true);
                         put(field.getName(), field.get(model));
                     }

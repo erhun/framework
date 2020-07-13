@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 public class OrmConfigurer {
 
 	@Bean
-	public Dialect frmDialect(@Value("${spring.datasource.driver-class-name}") String driverClassName){
+	public Dialect frmDialect(@Value("${spring.datasource.druid.driver-class-name}") String driverClassName){
 		Dialect dialect = null;
 		if(driverClassName.startsWith("com.mysql")){
 			dialect = new MySQLDialect();

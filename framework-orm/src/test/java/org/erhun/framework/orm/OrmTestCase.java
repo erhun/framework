@@ -2,6 +2,7 @@ package org.erhun.framework.orm;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.erhun.framework.basic.utils.ArrayUtils;
 import org.erhun.framework.basic.utils.PV;
 import org.erhun.framework.basic.utils.PageResult;
 import org.erhun.framework.basic.utils.json.JsonUtils;
@@ -48,7 +49,7 @@ public class OrmTestCase {
         Connection connection = sqlSession.getConnection();
         PreparedStatement preparedStatement = null;
         try {
-            preparedStatement = connection.prepareStatement("create table t_test(Id int primary key,text varchar,create_time datetime)");
+            preparedStatement = connection.prepareStatement("create table t_test(Id int primary key,text varchar,create_time datetime, test_id bigint,test_text varchar)");
             preparedStatement.execute();
         }catch (Exception ex){
             ex.printStackTrace();;
@@ -119,10 +120,14 @@ public class OrmTestCase {
 
         QueryParam queryParam = new QueryParam();
 
-        PageResult re1 = testDao.queryByPage( queryParam, null, Limits.of(1, 10));
-        PageResult re2 = testDao.queryByNextPage(queryParam, null, Limits.of(1, 10));
+        PageResult re2 = testDao.queryByNextPage(queryParam, null, Limits.of(1, 2));
 
-        System.out.println(re2.hasNextPage());
+        Assert.assertTrue(re2.hasNextPage());
+
+        PageResult re3 = testDao.queryByNextPage(queryParam, null, Limits.of(1, 10));
+
+        Assert.assertFalse(re3.hasNextPage());
+
 
         //System.out.println(JsonUtils.toJSONString(re));
     }
@@ -168,5 +173,22 @@ public class OrmTestCase {
 
     }
 
+
+    @Test
+    public void testUpdate() {
+
+        TestEntity entity = new TestEntity();
+
+       // entity.setId(1L);
+        entity.setText("test1sss");
+        testDao.updateByCondition(entity, PV.of("text", "test1"));
+
+        TestEntity entity1 = testDao.get(1L);
+
+        Assert.assertTrue(entity.getText().equals(entity1.getText()));
+
+
+        Object testInfo = testDao.findByCriteria(Criteria.fetch(TestEntity::getText).gt(TestEntity::getText, "test1").orderByAsc(TestEntity::getText).limit(1).forUpdate());
+    }
 
 }

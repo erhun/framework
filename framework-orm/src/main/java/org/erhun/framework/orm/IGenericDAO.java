@@ -154,7 +154,7 @@ public interface IGenericDAO<Id extends Serializable, E extends IEntity>{
 	 * @param affects 指定更新的列
 	 * @return
 	 */
-    int update(@Param("entity") E entity, @Param("affects") PV... affects);
+    int update(@Param("entity") E entity, @Param("affects") String... affects);
 
 	/**
 	 * 更新column中指定的列
@@ -163,14 +163,24 @@ public interface IGenericDAO<Id extends Serializable, E extends IEntity>{
 	 * @param value
 	 * @return
 	 */
-    int updateColumn(@Param("id") Id id, @Param("column") String column, @Param("value") Object value);
+    int updateColumn(@Param("id") Id id, @Param("column") String column, @Param("value") Object value, @Param("conditions") PV ...conditions);
 
 	/**
-	 * 根据criteria更新entity
-	 * @param criteria
+	 * 根据conditions更新entity
+	 * @param entity
+	 * @param conditions
 	 * @return
 	 */
-	int updateByCriteria(@Param("criteria") Criteria criteria);
+	int updateByCondition(@Param("entity") E entity, @Param("conditions") PV ...conditions);
+
+	/**
+	 * 根据conditions更新entity
+	 * @param entity
+	 * @param conditions
+	 * @param affects
+	 * @return
+	 */
+	int updateByCondition(@Param("entity") E entity, @Param("conditions") PV [] conditions, String ...affects);
 
 	/**
      * 根据id删除

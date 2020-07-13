@@ -13,7 +13,7 @@ import java.io.Serializable;
 /**
  *
  * @author weichao<gorilla@aliyun.com>
- * 
+ *
  */
 public abstract class AbstractBusinessController <Id extends Serializable, E extends BaseEntity<Id>, D extends BaseDTO> extends AbstractUserController {
 
@@ -66,9 +66,9 @@ public abstract class AbstractBusinessController <Id extends Serializable, E ext
      * @param id
      * @return
      */
-    @DeleteMapping
-    public ResultPack delete(Id id){
-        businessService.delete(id);
+    @DeleteMapping("{id}")
+    public ResultPack delete(@PathVariable String id){
+        businessService.deleteAll(id);
         return ResultPack.SUCCEED;
     }
 

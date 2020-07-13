@@ -23,6 +23,7 @@ import org.apache.ibatis.session.Configuration;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -84,6 +85,7 @@ public final class MybatisBuilder {
             buildDeleteColumnMappedStatement();
             buildUpdateMappedStatement();
             buildUpdateColumnMappedStatement();
+            buildUpdateByConditionMappedStatement();
             buildCountMappedStatement();
             buildGetMappedStatement();
             buildFindColumnMappedStatement();
@@ -294,6 +296,11 @@ public final class MybatisBuilder {
             addMappedStatement(configuration, statement, buildUpdateColumnSQL(), SqlCommandType.UPDATE, null, null);
         }
 
+        private void buildUpdateByConditionMappedStatement() {
+            String statement = daoClass.getName() + ".updateByCondition";
+            addMappedStatement(configuration, statement, buildUpdateByConditionSQL(), SqlCommandType.UPDATE, null, null);
+        }
+
         private String buildInsertSQL() {
 
             StringBuilder buf1 = new StringBuilder();
@@ -418,21 +425,24 @@ public final class MybatisBuilder {
 
             buf.append("<choose>");
             buf.append("<when test='affects!=null and affects.length > 0'>");
-            buf.append("<foreach collection=\"affects\" item=\"pv\" ");
+            buf.append("<foreach collection=\"affects\" item=\"name\" ");
             buf.append("index=\"index\" open=\"\" close=\"\" separator=\",\">");
-            buf.append("${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\".class,pv.name)}=#{entity.${pv.name}}");
+            buf.append("${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",name)}=#{entity.${name}}");
             buf.append("</foreach>");
             buf.append("</when>");
             buf.append("<otherwise>");
             for (AttributeInfo attributeInfo : entityFields) {
                 if(attributeInfo.isUpdatable()) {
+                    buf.append("<if test=\"entity.").append(attributeInfo.getFieldName()).append("!=null\">");
                     buf.append(attributeInfo.getColumnName()).append("=#{entity.").append(attributeInfo.getFieldName()).append("},");
+                    buf.append("</if>");
                 }
             }
             buf.append("</otherwise>");
             buf.append("</choose>");
             buf.append("</set>");
-            buf.append(" where id=#{entity.id}");
+            buf.append(" where ");
+            buf.append("id=#{entity.id}");
             buf.append("</update>");
 
             return buf.toString();
@@ -441,7 +451,62 @@ public final class MybatisBuilder {
 
         private String buildUpdateColumnSQL() {
 
-            return "<update>update " + SQLUtils.resolveTableName(entityClass) + " set ${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\", column)}=#{value} where id=#{id}</update>";
+            StringBuilder buf = new StringBuilder();
+            buf.append("<update>update " + SQLUtils.resolveTableName(entityClass) + " set ${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\", column)}=#{value} where ");
+            buf.append("id=#{id} ");
+
+            buf.append("<if test=\"conditions!=null\">");
+            buf.append("<foreach collection=\"conditions\" item=\"c\" ");
+            buf.append("index=\"index\" open=\" and \" close=\"\" separator=\" and \">");
+            buf.append("${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",c.name)}=#{c.value}");
+            buf.append("</foreach>");
+            buf.append("</if>");
+            buf.append("</update>");
+
+            return buf.toString();
+
+        }
+
+        private String buildUpdateByConditionSQL() {
+
+            StringBuilder buf = new StringBuilder();
+
+            buf.append("<update>");
+            buf.append("update ").append(SQLUtils.resolveTableName(entityClass)).append("<set>");
+
+            /*buf.append("<choose>");
+            buf.append("<when test='param3!=null and param3.length > 0'>");
+            buf.append("<foreach collection=\"param3\" item=\"name\" ");
+            buf.append("index=\"index\" open=\"\" close=\"\" separator=\",\">");
+            buf.append("${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\".class,name)}=#{entity.${name}}");
+            buf.append("</foreach>");
+            buf.append("</when>");
+            buf.append("<otherwise>");*/
+            for (AttributeInfo attributeInfo : entityFields) {
+                if(attributeInfo.isUpdatable()) {
+                    buf.append("<if test=\"entity.").append(attributeInfo.getFieldName()).append("!=null\">");
+                    buf.append(attributeInfo.getColumnName()).append("=#{entity.").append(attributeInfo.getFieldName()).append("},");
+                    buf.append("</if>");
+                }
+            }
+           /* buf.append("</otherwise>");
+            buf.append("</choose>");*/
+            /*for (AttributeInfo attributeInfo : entityFields) {
+                if(attributeInfo.isUpdatable()) {
+                    buf.append("<if test=\"entity.").append(attributeInfo.getFieldName()).append("!=null\">");
+                    buf.append(attributeInfo.getColumnName()).append("=#{entity.").append(attributeInfo.getFieldName()).append("},");
+                    buf.append("</if>");
+                }
+            }*/
+            buf.append("</set>");
+            buf.append(" where ");
+            buf.append("<foreach collection=\"conditions\" item=\"c\" ");
+            buf.append("index=\"index\" open=\"\" close=\"\" separator=\" and \">");
+            buf.append("${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",c.name)}=#{c.value}");
+            buf.append("</foreach>");
+            buf.append("</update>");
+
+            return buf.toString();
 
         }
 
@@ -560,8 +625,8 @@ public final class MybatisBuilder {
 
             buf.append(" ${criteria.criteria.groupBy} ");
             buf.append(" ${criteria.criteria.orderBy} ");
-            //buf.append(" ${criteria.criteria.limit} ");
-            //buf.append(" ${criteria.criteria.forUpdate} ");
+            /*buf.append(" ${criteria.criteria.limit} ");
+            buf.append(" ${criteria.criteria.forUpdate} ");*/
         }
 
         private void buildCriteriaConditions(StringBuilder buf) {
@@ -599,8 +664,10 @@ public final class MybatisBuilder {
                 String columnName = field.getColumnName();
                 String alias = null;
 
+                String tmpAlias = masterAlias;
+
                 if(StringUtils.isNotEmpty(field.getJoinKey())) {
-                    masterAlias = parseJoin(field, select, from);
+                    tmpAlias = parseJoin(field, select, from);
                 }else if(StringUtils.isNotBlank(item)){
                     alias = "t_" + columnName;
                     from.append(" left join t_code_item ").append(alias).append(" on ").append(alias).append(".group_id='").append(item).append("' and ").append(alias).append(".code=").append(masterAlias).append(".").append(columnName);
@@ -612,14 +679,15 @@ public final class MybatisBuilder {
                 }
 
                 condition.append("<if test=\"entity.").append(field.getFieldName()).append("!=null\">");
-                condition.append("<choose><when test=\"entity.").append(field.getFieldName()).append(" instanceof String and entity.").append(field.getFieldName()).append("!=''\">");
-
+                condition.append("<choose><when test=\"entity.").append(field.getFieldName()).append(" instanceof String\">");
+                condition.append("<if test=\"entity.").append(field.getFieldName()).append("!=''\">");
                 if (StringUtils.isNotBlank(item)) {
                     condition.append(" and ").append(alias).append(".name like concat(#{entity.").append(field.getFieldName()).append("},'%')");
                 } else {
                     condition.append(" and ").append("t.").append(columnName).append("${@org.erhun.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",\""+field.getFieldName()+"\",entity."+field.getFieldName()+")}");
                     //condition.append(" and ").append("t.").append(columnName).append(" like concat(#{entity.").append(with.getName()).append("},'%')");
                 }
+                condition.append("</if>");
                 condition.append("</when><otherwise>");
                 condition.append(" and ").append(masterAlias).append(".").append(columnName).append("=#{entity.").append(field.getFieldName()).append("}");
                 condition.append("</otherwise></choose>");
@@ -634,7 +702,7 @@ public final class MybatisBuilder {
 
 
             select.setLength(select.length() -1);
-            select.append(" from ").append(SQLUtils.resolveTableName(entityClass)).append(" t").append(from).append(" where 1=1 ").append(condition);
+            select.append(" from ").append(SQLUtils.resolveTableName(entityClass)).append(" ").append(masterAlias).append(from).append(" where 1=1 ").append(condition);
 
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
                 select.append(" and t.is_deleted='1'");
@@ -777,8 +845,8 @@ public final class MybatisBuilder {
             }
 
             buf1.append(" from ");
-            buf1.append(SQLUtils.resolveTableName(entityClass));
-            buf1.append(" where id=#{id}");
+            buf1.append(SQLUtils.resolveTableName(entityClass)).append(" ").append(masterAlias);
+            buf1.append(" where ").append(masterAlias).append(".id=#{id}");
             buf1.append("</select>");
 
             return buf1.toString();
@@ -1093,7 +1161,7 @@ public final class MybatisBuilder {
                 alias = getTableAlias(clazz, join, true);
                 buf3.append(" ").append(joinType.name().toLowerCase()).append(" join ");
                 String tableName = SQLUtils.resolveTableName(clazz);
-                buf3.append(tableName).append(" ").append(alias).append(" on ").append(alias).append(".").append(key).append("=").append("t.").append(columnName);
+                buf3.append(tableName).append(" ").append(alias).append(" on ").append(alias).append(".").append(joinKey).append("=").append("t.").append(columnName);
                 if(StringUtils.isNotBlank(join.getJoinCondition())){
                     buf3.append(" and ").append(join.getJoinCondition());
                 }
@@ -1266,7 +1334,7 @@ public final class MybatisBuilder {
 
         StringBuilder buf = new StringBuilder();
 
-        buf.append("<select>update test set is_deleted='0' where 1=1 <if test=\"pv!=null or (pv instanceof String and pv!='')\">and bb=111</if></select>");
+        buf.append("<select>update test set is_deleted='0' where 1=1 <if test=\"pv2!=null or (pv instanceof String and pv!='')\">and bb=111</if></select>");
 
         XPathParser p = new XPathParser(buf.toString());
 

@@ -1,10 +1,12 @@
 package org.erhun.framework.domain.services;
 
 import org.erhun.framework.basic.utils.PV;
+import org.erhun.framework.basic.utils.PageResult;
 import org.erhun.framework.basic.utils.ResultPack;
-import org.erhun.framework.orm.Criteria;
-import org.erhun.framework.orm.QueryParam;
 import org.erhun.framework.domain.entities.BaseEntity;
+import org.erhun.framework.orm.Criteria;
+import org.erhun.framework.orm.Limits;
+import org.erhun.framework.orm.QueryParam;
 import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
@@ -17,8 +19,6 @@ import java.util.List;
  */
 @Service
 public interface IBusinessService <Id extends Serializable, E extends BaseEntity<Id>> {
-
-    boolean deleteAll(String idList) throws BusinessException;
 
     /**
      * @param id
@@ -69,6 +69,14 @@ public interface IBusinessService <Id extends Serializable, E extends BaseEntity
     boolean delete(Id id) throws BusinessException;
 
     /**
+     *
+     * @param idList
+     * @return
+     * @throws BusinessException
+     */
+    boolean deleteAll(String idList) throws BusinessException;
+
+    /**
      * @param pvs
      * @return
      */
@@ -86,6 +94,11 @@ public interface IBusinessService <Id extends Serializable, E extends BaseEntity
      */
     List <E> queryById(String idList);
 
+    /**
+     *
+     * @param criteria
+     * @return
+     */
     List <E> queryByCriteria(Criteria criteria);
 
     /**
@@ -100,6 +113,32 @@ public interface IBusinessService <Id extends Serializable, E extends BaseEntity
      * @return
      */
     ResultPack queryByPage(QueryParam queryParam, String[] fetchFields);
+
+    /**
+     * 根据queryParam查询记录并返回指定列，不执行统计条类语句
+     * @param entity
+     * @param fetchFields
+     * @param limit
+     * @return
+     */
+    PageResult<E> queryByNextPage(QueryParam entity, String fetchFields[], Limits limit);
+
+    /**
+     * @param queryParam
+     * @param fetchFields
+     * @return
+     */
+    ResultPack queryByPage(QueryParam queryParam, String[] fetchFields, Criteria criteria);
+
+    /**
+     * 根据queryParam查询记录并返回指定列，不执行统计条类语句
+     * @param entity
+     * @param fetchColumns
+     * @param criteria
+     * @param limit
+     * @return
+     */
+    PageResult <E> queryByNextPage(QueryParam entity, String fetchColumns[], Criteria criteria, Limits limit);
 
     /**
      * @param <T>

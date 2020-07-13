@@ -4,13 +4,13 @@ import java.io.Serializable;
 import java.util.*;
 
 /**
- * 
+ *
  * @author weichao <gorilla@aliyun.com>
  */
 public class ResultPack implements Serializable {
 
     /**
-     * 
+     *
      */
     public static final long serialVersionUID = 1L;
 
@@ -32,7 +32,7 @@ public class ResultPack implements Serializable {
 
 
     public final static ResultPack FAILED = new Result(FAIL, FAIL_TEXT, true);
-    
+
     public static ResultPack result(Integer code, String message) {
         return new Result(code, message);
     }
@@ -153,12 +153,12 @@ public class ResultPack implements Serializable {
         @Override
         @SuppressWarnings("unchecked")
         public <T> T model() {
-            return (T) get("model");
+            return (T) get("data");
         }
 
         @Override
         public ResultPack model(Object model) {
-            this.put("model", model);
+            this.put("data", model);
             return this;
         }
 

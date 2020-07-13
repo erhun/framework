@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 /**
  *
  * @author weichao<gorilla@aliyun.com>
- * 
+ *
  */
 public abstract class AbstractUserController extends BaseController {
 
@@ -23,7 +23,11 @@ public abstract class AbstractUserController extends BaseController {
     }
 
     protected User getUser(){
-        return (User) getRequest().getSession().getAttribute(SessionConstants.LOGIN_USER);
+        User user = (User) getRequest().getAttribute(SessionConstants.LOGIN_USER);
+        if(user == null){
+            user = (User) getRequest().getSession().getAttribute(SessionConstants.LOGIN_USER);
+        }
+        return user;
     }
 
 

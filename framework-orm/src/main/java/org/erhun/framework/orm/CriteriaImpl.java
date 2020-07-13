@@ -93,7 +93,18 @@ public class CriteriaImpl implements Criteria{
             this.criteria = criteria;
         }
         public Criteria forUpdate() {
-            return criteria.forUpdate();
+            return CriteriaImpl.this.forUpdate();
+        }
+        @Override
+        public String toString() {
+            return criteria.toString();
+        }
+    }
+
+    public class End implements Criteria{
+        private CriteriaImpl criteria;
+        End(CriteriaImpl criteria){
+            this.criteria = criteria;
         }
         @Override
         public String toString() {
@@ -134,7 +145,7 @@ public class CriteriaImpl implements Criteria{
 
     public Criteria forUpdate() {
         this.forUpdate = " for update ";
-        return this;
+        return new End(this);
     }
 
     private List<Object> conditions() {

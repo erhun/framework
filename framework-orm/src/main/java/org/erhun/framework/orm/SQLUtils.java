@@ -169,6 +169,7 @@ public class SQLUtils {
                 attributeInfo.setUpdatable(attributeDef.updatable());
             }
 
+
             Column column = field.getAnnotation(Column.class);
 
             if (column != null && StringUtils.isNotEmpty(column.name())) {
@@ -199,6 +200,14 @@ public class SQLUtils {
                 attributeInfo.setAutoIncrement(true);
                 attributeInfo.setCreatable(false);
                 attributeInfo.setUpdatable(false);
+            }
+
+            if(field.getAnnotation(Join.class) != null) {
+                Join join = field.getAnnotation(Join.class);
+                attributeInfo.setJoinKey(join.value());
+                attributeInfo.setJoinClass(join.clazz());
+                attributeInfo.setJoinType(join.type());
+                attributeInfo.setJoinCondition(join.condition());
             }
 
             attributeInfo.setField(field);
