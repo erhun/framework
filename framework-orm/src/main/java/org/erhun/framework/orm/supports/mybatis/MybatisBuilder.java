@@ -407,7 +407,7 @@ public final class MybatisBuilder {
             for (AttributeInfo field : entityFields) {
                 if(field.isCreatable()) {
                     buf1.append("<if test=\"entity != null and entity.").append(field.getFieldName()).append("!=null").append("\">");
-                    buf1.append(field.getColumnName()).append(",");
+                    buf1.append("`").append(field.getColumnName()).append("`,");
                     buf1.append("</if>");
                     buf2.append("<if test=\"entity != null and entity.").append(field.getFieldName()).append("!=null").append("\">");
                     buf2.append("#{entity.").append(field.getFieldName()).append("}, ");
@@ -427,14 +427,14 @@ public final class MybatisBuilder {
             buf.append("<when test='affects!=null and affects.length > 0'>");
             buf.append("<foreach collection=\"affects\" item=\"name\" ");
             buf.append("index=\"index\" open=\"\" close=\"\" separator=\",\">");
-            buf.append("${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",name)}=#{entity.${name}}");
+            buf.append("`${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",name)}`=#{entity.${name}}");
             buf.append("</foreach>");
             buf.append("</when>");
             buf.append("<otherwise>");
             for (AttributeInfo attributeInfo : entityFields) {
                 if(attributeInfo.isUpdatable()) {
                     buf.append("<if test=\"entity.").append(attributeInfo.getFieldName()).append("!=null\">");
-                    buf.append(attributeInfo.getColumnName()).append("=#{entity.").append(attributeInfo.getFieldName()).append("},");
+                    buf.append("`").append(attributeInfo.getColumnName()).append("`=#{entity.").append(attributeInfo.getFieldName()).append("},");
                     buf.append("</if>");
                 }
             }
@@ -674,7 +674,7 @@ public final class MybatisBuilder {
                     select.append(alias).append(".name ").append(columnName).append(",");
                 }else {
                     if(field.isQueryable()) {
-                        select.append(masterAlias).append(".").append(columnName).append(",");
+                        select.append(masterAlias).append(".`").append(columnName).append("`,");
                     }
                 }
 
@@ -718,7 +718,7 @@ public final class MybatisBuilder {
 
             sql.append("<choose><when test='fetchColumns!=null'>");
             sql.append("<foreach collection=\"fetchColumns\" item=\"column\" separator=\",\">");
-            sql.append("${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",pv.name)}");
+            sql.append("`${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",column)}`");
             sql.append("</foreach>");
             sql.append("</when>");
             sql.append("<otherwise>*</otherwise></choose>");

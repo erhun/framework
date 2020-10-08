@@ -6,6 +6,7 @@ import org.erhun.framework.basic.utils.PageResult;
 import org.erhun.framework.basic.utils.ResultPack;
 import org.erhun.framework.basic.utils.generics.GenericsUtils;
 import org.erhun.framework.basic.utils.string.StringUtils;
+import org.erhun.framework.basic.utils.uuid.LongId;
 import org.erhun.framework.basic.utils.uuid.ObjectId;
 import org.erhun.framework.domain.dao.BaseDAO;
 import org.erhun.framework.domain.entities.BaseEntity;
@@ -107,6 +108,8 @@ public abstract class AbstractBusinessService<Id extends Serializable, E extends
         }else {
             if (String.class.isAssignableFrom(idClass)) {
                 entity.setId((Id) ObjectId.id());
+            }else if(Long.class.isAssignableFrom(idClass)){
+                entity.setId((Id) LongId.id());
             }
         }
 

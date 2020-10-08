@@ -17,14 +17,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * 
+ *
  * @author weichao <gorilla@aliyun.com>
  * @date 2016-2-3
  */
 public final class JsonUtils {
 
 	private final static Logger logger = LoggerFactory.getLogger(JsonUtils.class);
-	
+
 	private static final ObjectMapper defaultMapper = new ObjectMapper();
 
 	static {
@@ -54,10 +54,10 @@ public final class JsonUtils {
 		});
 		defaultMapper.registerModule(javaTimeModule);
 	}
-	
+
 	private JsonUtils() {
 	}
-	
+
 	public static ObjectMapper build(Include include) {
 		ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.setSerializationInclusion(include);
@@ -65,7 +65,7 @@ public final class JsonUtils {
 	}
 
 	public static <T> T parse(String json) {
-		
+
 		if(json == null){
 			return null;
 		}
@@ -89,9 +89,9 @@ public final class JsonUtils {
 			return null;
 		}
 	}
-	
+
 	public static <T> T parse(String json, Class <T> clazz) {
-		
+
 		if(StringUtils.isEmpty(json)){
 			return null;
 		}
@@ -119,7 +119,7 @@ public final class JsonUtils {
 		}
 
 	}
-	
+
 	public static <T extends List <?> > T parseList(String json, Class <?> elementClass) {
 		try {
 			JavaType javaType = defaultMapper.getTypeFactory().constructCollectionType(List.class, elementClass);
@@ -129,7 +129,7 @@ public final class JsonUtils {
 			return null;
 		}
 	}
-	
+
 	public static void main(String[] args) {
 		Object o = parse("{\"ss\":{\"ff\":3},\"parameters\":[{\"name\":\"33\"}]}=");
 		System.out.println(System.currentTimeMillis());

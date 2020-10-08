@@ -6,20 +6,20 @@ import org.erhun.framework.basic.utils.string.StringUtils;
 import java.util.Map;
 
 /**
- * 
+ *
  * @author weichao <gorilla@aliyun.com>
  * @date 2017年5月4日
  */
-public class MapUtility {
+public class MapUtils {
 
-	
+
 	/**
-	 * 
+	 *
 	 * @param mp
 	 * @return
 	 */
 	public static String toString( Map <?,?> mp ){
-		
+
 		if( mp != null ){
 			StringBuilder sb = new StringBuilder();
 			for( Map.Entry <?,?> en : mp.entrySet() ){
@@ -30,9 +30,9 @@ public class MapUtility {
 			}
 			return sb.toString();
 		}
-		
+
 		return StringPool.EMPTY;
-		
+
 	}
 
 	public static boolean isEmpty( Map <?, ?> map ) {
