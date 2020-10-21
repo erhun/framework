@@ -11,13 +11,13 @@ import org.erhun.framework.rbac.RbacRole;
 import java.util.List;
 
 /**
- * 
+ *
  * @author weichao<gorilla@gliyun.com>
  *
  */
 @Table(value = "t_rbac_group", alias = "用户组")
 @AttributeOverrides({
-    @AttributeDef(value="code",
+    @AttrDef(value="code",
           validators={
                 @Validator(clazz = Prefix.class, value = "gp_")
           }
@@ -30,16 +30,16 @@ public class GroupInfo extends AbstractBizEntity<String> implements RbacGroup {
     @Join(clazz = ApplicationInfo.class)
     @QueryDelimiter
     private String applicationId;
-    
+
     @Transient
     @Join(clazz = ApplicationInfo.class, value="name")
     private String applicationText;
-    
+
     private String name;
 
     @Ignore
     private String type;
-    
+
 	private String memo;
 
     @Override

@@ -40,26 +40,26 @@ import java.util.concurrent.TimeUnit;
  *
  */
 public class HttpClientUtils {
-	
+
 	private static Logger log = LoggerFactory.getLogger(HttpClientUtils.class);
-	
+
 	/**
-	 * 连接超时时间，由bean factory设置，缺省为8秒钟 
+	 * 连接超时时间，由bean factory设置，缺省为8秒钟
 	 */
 	private static int defaultConnectionTimeout = 60000;
 
-	/** 
-	 * 回应超时时间, 由bean factory设置，缺省为30秒钟 
+	/**
+	 * 回应超时时间, 由bean factory设置，缺省为30秒钟
 	 */
 
 	private static int defaultSoTimeout = 60000;
-    
+
     private static HttpClientUtils httpProtocolHandler = new HttpClientUtils();
-    
+
     private static SSLConnectionSocketFactory sslSocketFactory;
 
 	private static PoolingHttpClientConnectionManager poolingConnectionManager;
-    
+
     static{
 		try{
 		    SSLSocketFactory s = new SSLSocketFactoryImpl();
@@ -74,33 +74,33 @@ public class HttpClientUtils {
     public static HttpClientUtils getInstance() {
         return httpProtocolHandler;
     }
-   
+
     private HttpClientUtils(){
     }
 
 	/**
-	 * 
+	 *
 	 * @param url
 	 * @return
 	 */
 	public static String doGet(String url) {
 		return doGet(url, null);
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param url
 	 * @param headers
 	 * @return
 	 */
 	public static String doGet(String url, Map <String, String> headers) {
-		
+
 		long startTime = System.currentTimeMillis();
 
 		CloseableHttpClient client = null;
 		HttpGet httpGet = null;
 		CloseableHttpResponse response = null;
-		
+
 		try {
 			String charset = getCharset(headers, "utf-8");
 			client = createHttpClient();
@@ -119,11 +119,11 @@ public class HttpClientUtils {
 		}
 
 		return null;
-		
+
 	}
 
 	/**
-	 * 
+	 *
 	 * @param url
 	 * @param param
 	 * @return
@@ -131,9 +131,9 @@ public class HttpClientUtils {
 	public static String doPost(String url, String param) {
 		return doPost(url, param, (Map<String, String>) null);
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param url
 	 * @param params
 	 * @param contentType
@@ -142,9 +142,9 @@ public class HttpClientUtils {
 	public static String doPost(String url, String params, String contentType) {
 		return doPost(url, params, contentType, null) ;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param url
 	 * @param params
 	 * @param requestProperties
@@ -153,9 +153,9 @@ public class HttpClientUtils {
 	public static String doPost(String url, String params, Map <String, String> requestProperties) {
 		return doPost(url, params, "application/x-www-form-urlencoded", requestProperties) ;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param url
 	 * @param params
 	 * @param requestProperties
@@ -164,21 +164,23 @@ public class HttpClientUtils {
 	public static String doPostByStream(String url, String params, Map <String, String> requestProperties) {
 		return doPost(url, params, "*/*", requestProperties) ;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param url
 	 * @param params
 	 * @param headers
 	 * @return
 	 */
 	public static String doPost(String url, String params, String contentType, Map <String, String> headers) {
-		
+
 		long startTime = System.currentTimeMillis();
-		
+
 		CloseableHttpClient client = null;
 		HttpPost httpPost = null;
-		
+
+		boolean returnHttpStatus = getParameter(headers, "Throw-Error", false);
+
 		try {
 			String charset = getCharset(headers, "utf-8");
 			client = createHttpClient();
@@ -189,13 +191,16 @@ public class HttpClientUtils {
 			return execute(client, httpPost, headers, url, charset);
 		} catch (Exception e) {
 			log.warn(url + " request error: " + e.getMessage(), e);
+			if(returnHttpStatus){
+				throw new RuntimeException(e.getMessage(), e);
+			}
 		} finally {
-			log.info( "execute " + url + " used time: " + (System.currentTimeMillis() - startTime) + "ms");
+			log.info( "execute " + url + " use time: " + (System.currentTimeMillis() - startTime) + "ms");
 			if (httpPost != null) {
 				httpPost.releaseConnection();
 			}
 		}
-		
+
 		return null;
 	}
 
@@ -272,17 +277,17 @@ public class HttpClientUtils {
 	}
 
 	private static String execute(CloseableHttpClient client, HttpRequestBase httpMethod, Map <String, String> headers, String url, String charset) throws IOException, ClientProtocolException {
-		
+
 		CloseableHttpResponse response = null;
-		
+
 		boolean returnHttpStatus = getParameter(headers, "Http-Status", false);
 		boolean acceptErrorResult = getParameter(headers, "Read-Error", false);
-	
+
 		response = client.execute(httpMethod);
-		
+
 		int statusCode = response.getStatusLine().getStatusCode();
 		String responseText = EntityUtils.toString(response.getEntity(), charset);
-		
+
 		if (statusCode == HttpStatus.SC_OK || acceptErrorResult) {
 			return responseText;
 		}else{
@@ -294,7 +299,7 @@ public class HttpClientUtils {
 				return "httpStatus=" + statusCode + "&httpMessage=" + StringUtils.defaultString(responseText);
 			}
 		}
-			
+
 		return null;
 	}
 
@@ -363,16 +368,16 @@ public class HttpClientUtils {
 
 		return null;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	private static <T> T getParameter(Map<String, String> headers, String propertyName, T defaultValue) {
-		
+
 		if(headers == null || headers.size() == 0){
 			return (T) defaultValue;
 		}
-		
+
 		String value = headers.get(propertyName);
-		
+
 		if(StringUtils.isNotBlank(value)){
 			Class<T> clazz = (Class<T>) defaultValue.getClass();
 			if(clazz == Integer.class){
@@ -383,9 +388,9 @@ public class HttpClientUtils {
 			}
 			return (T) value;
 		}
-		
+
 		return defaultValue;
-		
+
 	}
 
 	private static String getCharset(Map<String, String> headers, String defaultValue) {
@@ -405,24 +410,24 @@ public class HttpClientUtils {
 	private static CloseableHttpClient createHttpClient() {
 		return HttpClients.custom().setConnectionManager(poolingConnectionManager).build();
 	}
-	
+
 	public HttpClient getHttpClient(){
 	    CloseableHttpClient httpClient = HttpClientBuilder.create().setConnectionTimeToLive(defaultConnectionTimeout, TimeUnit.SECONDS).build();
 		return httpClient;
 	}
-	
+
 	private static <T extends HttpRequestBase> T createHttpMethod(T method, Map<String,String> headers){
-		
+
 		int connectTimeout = getParameter(headers, "Connection-Timeout", defaultConnectionTimeout);
 		method.setConfig(RequestConfig.custom().setConnectionRequestTimeout(connectTimeout).setConnectTimeout(connectTimeout).setSocketTimeout(connectTimeout).build());
-		
+
 		if(headers == null || headers.size() == 0){
 			return method;
 		}
-		
+
 		Set<Entry<String, String>> entrySet = headers.entrySet();
 		Iterator<Entry<String, String>> iterator = entrySet.iterator();
-		
+
 		while(iterator.hasNext()){
 			Entry<String, String> next = iterator.next();
 			String key = next.getKey();
@@ -432,10 +437,10 @@ public class HttpClientUtils {
 			String value = next.getValue();
 			method.addHeader(key,value);
 		}
-		
+
 		return (T) method;
 	}
-	
+
 	private static class HttpsX509TrustManager implements X509TrustManager{
 		@Override
 		public void checkClientTrusted(X509Certificate[] chain, String authType)
@@ -450,5 +455,5 @@ public class HttpClientUtils {
 			return null;
 		}
 	}
-	
+
 }

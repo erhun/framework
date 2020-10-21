@@ -3,7 +3,6 @@ package org.erhun.framework.orm;
 import org.erhun.framework.orm.dialect.Dialect;
 import org.erhun.framework.orm.dialect.MySQLDialect;
 import org.erhun.framework.orm.dialect.OracleDialect;
-import org.erhun.framework.orm.supports.mybatis.MybatisMappedStatementRegistry;
 import org.erhun.framework.orm.supports.mybatis.PageInterceptor;
 import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,10 +28,15 @@ public class OrmConfigurer {
 		return dialect;
 	}
 
-	@Bean
+	/*@Bean
 	public MybatisMappedStatementRegistry mybatisMappedStatementRegistry(){
 		MybatisMappedStatementRegistry mmsr = new MybatisMappedStatementRegistry();
 		return mmsr;
+	}*/
+
+	@Bean
+	public ContextRefreshedListener contextRefreshedListener(){
+		return new ContextRefreshedListener();
 	}
 
 	@Bean

@@ -1,5 +1,6 @@
 package org.erhun.framework.orm;
 
+import org.apache.ibatis.type.TypeHandler;
 import org.erhun.framework.orm.annotations.JoinType;
 
 import java.lang.reflect.Field;
@@ -8,7 +9,7 @@ import java.lang.reflect.Field;
  * @Author weichao <gorilla@aliyun.com>
  * @Date 2019/10/25
  */
-public class AttributeInfo {
+public class AttributeDefinition {
     private Field field;
     private String fieldName;
     private String columnName;
@@ -23,6 +24,7 @@ public class AttributeInfo {
     private String item;
 
     private Class joinClass;
+    private Class <TypeHandler> typeHandler;
     private JoinType joinType;
     private String joinKey;
     private String joinCondition;
@@ -153,5 +155,13 @@ public class AttributeInfo {
 
     public void setJoinKey(String joinKey) {
         this.joinKey = joinKey;
+    }
+
+    public Class getTypeHandler() {
+        return typeHandler;
+    }
+
+    public void setTypeHandler(Class typeHandler) {
+        this.typeHandler = typeHandler;
     }
 }

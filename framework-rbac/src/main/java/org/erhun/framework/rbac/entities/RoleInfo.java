@@ -8,13 +8,13 @@ import org.erhun.framework.orm.annotations.validator.Prefix;
 import org.erhun.framework.orm.annotations.validator.Validator;
 
 /**
- * 
+ *
  * @author weichao<gorilla@gliyun.com>
  *
  */
 @Table(value="t_rbac_role", alias="角色")
 @AttributeOverrides({
-    @AttributeDef(value="code",
+    @AttrDef(value="code",
         validators={
             @Validator(clazz = NotNull.class),
             @Validator(clazz = Prefix.class, value = "rl_")
@@ -30,7 +30,7 @@ public class RoleInfo extends AbstractBizEntity<String> {
     @Transient
     @Join(clazz = ApplicationInfo.class, value = "name")
     private String applicationText;
-    
+
     private String name;
 
     public String getApplicationId() {

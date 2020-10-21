@@ -1,6 +1,7 @@
 package org.erhun.framework.orm;
 
 
+import org.apache.ibatis.type.TypeHandler;
 import org.erhun.framework.basic.utils.ClassUtils;
 import org.erhun.framework.basic.utils.lambda.GetterLambdaFunction;
 import org.erhun.framework.basic.utils.lambda.LambdaUtils;
@@ -35,9 +36,9 @@ public class SQLUtils {
 
     private static final AtomicLong UID_GENERATOR = new AtomicLong(System.currentTimeMillis());
 
-    public static final Map <String, TreeMap <String, AttributeInfo>> attributeDefinition = new HashMap();
+    public static final Map <String, TreeMap <String, AttributeDefinition>> attributeDefinition = new HashMap();
 
-    public static final Map <GetterLambdaFunction, AttributeInfo> lamdbaAttributeDefinition = new HashMap();
+    public static final Map <GetterLambdaFunction, AttributeDefinition> lamdbaAttributeDefinition = new HashMap();
 
     public static long nextUID() {
         return UID_GENERATOR.getAndIncrement();
@@ -88,7 +89,7 @@ public class SQLUtils {
 
     public static <T> String resolveColumnName(GetterLambdaFunction function) {
 
-        AttributeInfo attributeInfo = lamdbaAttributeDefinition.get(function);
+        AttributeDefinition attributeInfo = lamdbaAttributeDefinition.get(function);
 
         if(attributeInfo == null){
             SerializedLambda lambda = LambdaUtils.getSerializedLambda(function);
@@ -114,7 +115,7 @@ public class SQLUtils {
      * @return
      */
     public static <T> String resolveColumnName(Class entityClass, Field field) {
-        AttributeInfo attributeInfo = resolveAttributeInfo(entityClass, field);
+        AttributeDefinition attributeInfo = resolveAttributeInfo(entityClass, field);
         if(attributeInfo != null){
             return attributeInfo.getColumnName();
         }
@@ -126,9 +127,9 @@ public class SQLUtils {
      * @param entityClass
      * @return
      */
-    public static Collection <AttributeInfo> getAttributeDefinition(Class entityClass) {
+    public static Collection <AttributeDefinition> getAttributeDefinition(Class entityClass) {
 
-        TreeMap <String, AttributeInfo> attributes = attributeDefinition.get(entityClass.getName());
+        TreeMap <String, AttributeDefinition> attributes = attributeDefinition.get(entityClass.getName());
 
         if(attributes == null){
             attributes = initAttributeDefinition(entityClass);
@@ -138,9 +139,9 @@ public class SQLUtils {
 
     }
 
-    private static TreeMap<String, AttributeInfo> initAttributeDefinition(Class entityClass) {
+    private static TreeMap<String, AttributeDefinition> initAttributeDefinition(Class entityClass) {
 
-        TreeMap<String, AttributeInfo> attributes = new TreeMap<>();
+        TreeMap<String, AttributeDefinition> attributes = new TreeMap<>();
 
         Field[] entityFields = ClassUtils.getDeclaredFields(entityClass);
 
@@ -156,17 +157,20 @@ public class SQLUtils {
                 continue;
             }
 
-            AttributeInfo attributeInfo = new AttributeInfo();
+            AttributeDefinition attributeDefinition = new AttributeDefinition();
             String columnName = null;
 
-            AttributeDef attributeDef = field.getAnnotation(AttributeDef.class);
+            AttrDef attributeDef = field.getAnnotation(AttrDef.class);
 
             if (attributeDef != null) {
                 if (StringUtils.isNotEmpty(attributeDef.value())) {
                     columnName = attributeDef.value();
                 }
-                attributeInfo.setCreatable(attributeDef.creatable());
-                attributeInfo.setUpdatable(attributeDef.updatable());
+                attributeDefinition.setCreatable(attributeDef.creatable());
+                attributeDefinition.setUpdatable(attributeDef.updatable());
+                if(attributeDef.typeHandler() != Object.class) {
+                    attributeDefinition.setTypeHandler(attributeDef.typeHandler());
+                }
             }
 
 
@@ -181,50 +185,50 @@ public class SQLUtils {
             }
 
             if(field.getName().equalsIgnoreCase("id")){
-                attributeInfo.setPrimaryKey(true);
-                attributeInfo.setAutoIncrement(autoIncrement);
-                attributeInfo.setUpdatable(false);
+                attributeDefinition.setPrimaryKey(true);
+                attributeDefinition.setAutoIncrement(autoIncrement);
+                attributeDefinition.setUpdatable(false);
                 if(autoIncrement){
-                    attributeInfo.setCreatable(false);
+                    attributeDefinition.setCreatable(false);
                 }
             }
 
             if(field.getAnnotation(Transient.class) != null) {
-                attributeInfo.setTransient(field.getAnnotation(Transient.class) != null);
-                attributeInfo.setCreatable(false);
-                attributeInfo.setUpdatable(false);
-                attributeInfo.setQueryable(false);
+                attributeDefinition.setTransient(field.getAnnotation(Transient.class) != null);
+                attributeDefinition.setCreatable(false);
+                attributeDefinition.setUpdatable(false);
+                attributeDefinition.setQueryable(false);
             }
 
             if(field.getAnnotation(AutoIncrement.class) != null) {
-                attributeInfo.setAutoIncrement(true);
-                attributeInfo.setCreatable(false);
-                attributeInfo.setUpdatable(false);
+                attributeDefinition.setAutoIncrement(true);
+                attributeDefinition.setCreatable(false);
+                attributeDefinition.setUpdatable(false);
             }
 
             if(field.getAnnotation(Join.class) != null) {
                 Join join = field.getAnnotation(Join.class);
-                attributeInfo.setJoinKey(join.value());
-                attributeInfo.setJoinClass(join.clazz());
-                attributeInfo.setJoinType(join.type());
-                attributeInfo.setJoinCondition(join.condition());
+                attributeDefinition.setJoinKey(join.value());
+                attributeDefinition.setJoinClass(join.clazz());
+                attributeDefinition.setJoinType(join.type());
+                attributeDefinition.setJoinCondition(join.condition());
             }
 
-            attributeInfo.setField(field);
-            attributeInfo.setFieldName(field.getName());
-            attributeInfo.setColumnName(columnName);
+            attributeDefinition.setField(field);
+            attributeDefinition.setFieldName(field.getName());
+            attributeDefinition.setColumnName(columnName);
 
             NestedResultMapping nestedResultMapping = field.getAnnotation(NestedResultMapping.class);
 
             if (nestedResultMapping != null) {
-                attributeInfo.setNestedResultMapId(nestedResultMapping.value());
-                attributeInfo.setNestedResultMapColumn(resolveColumnName(entityClass, nestedResultMapping.column()));
-                attributeInfo.setCreatable(false);
-                attributeInfo.setUpdatable(false);
-                attributeInfo.setQueryable(false);
+                attributeDefinition.setNestedResultMapId(nestedResultMapping.value());
+                attributeDefinition.setNestedResultMapColumn(resolveColumnName(entityClass, nestedResultMapping.column()));
+                attributeDefinition.setCreatable(false);
+                attributeDefinition.setUpdatable(false);
+                attributeDefinition.setQueryable(false);
             }
 
-            attributes.put(field.getName(), attributeInfo);
+            attributes.put(field.getName(), attributeDefinition);
 
         }
 
@@ -241,16 +245,16 @@ public class SQLUtils {
      * @param field
      * @return
      */
-    private static <T> AttributeInfo resolveAttributeInfo(Class entityClass, Field field) {
+    private static <T> AttributeDefinition resolveAttributeInfo(Class entityClass, Field field) {
 
         if(field == null){
             return null;
         }
 
-        TreeMap <String, AttributeInfo> attributes = attributeDefinition.get(entityClass.getName());
+        TreeMap <String, AttributeDefinition> attributes = attributeDefinition.get(entityClass.getName());
 
         if(attributes != null){
-            AttributeInfo attributeInfo = attributes.get(field.getName());
+            AttributeDefinition attributeInfo = attributes.get(field.getName());
             if(attributeInfo != null){
                 return attributeInfo;
             }

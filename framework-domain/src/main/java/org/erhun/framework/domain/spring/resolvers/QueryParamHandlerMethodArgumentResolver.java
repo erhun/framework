@@ -45,7 +45,7 @@ public class QueryParamHandlerMethodArgumentResolver extends MapMethodProcessor 
 
         try {
 
-            if(types != null && types.length > 0) {
+            if(types != null && types.length > 0 && types[0] instanceof ParameterizedType) {
                 ParameterizedType ptt = (ParameterizedType) types[0];
                 if(ptt.getActualTypeArguments()[0] instanceof Class) {
                     Class genericParameterClass = (Class) ptt.getActualTypeArguments()[0];

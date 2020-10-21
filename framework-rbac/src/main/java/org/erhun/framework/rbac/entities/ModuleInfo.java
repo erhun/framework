@@ -13,7 +13,7 @@ import org.erhun.framework.rbac.RbacModule;
 import java.util.List;
 
 /**
- * 
+ *
  * @author weichao<gorilla@gliyun.com>
  *
  */
@@ -21,7 +21,7 @@ import java.util.List;
     @Value({"code", "applicationId"})
 })
 @AttributeOverrides({
-    @AttributeDef(value="code",
+    @AttrDef(value="code",
         validators={
             @Validator(clazz = Prefix.class, value = "M")
         }
@@ -29,39 +29,39 @@ import java.util.List;
 })
 @Table(value = "t_rbac_module", alias = "模块信息")
 public class ModuleInfo extends AbstractBizEntity<String> implements RbacModule, IOrderEntity {
-    
+
     @Join(clazz = ApplicationInfo.class)
     @QueryDelimiter
     private String applicationId;
-    
+
     @Transient
     @Join(clazz = ApplicationInfo.class, value="name")
     private String applicationText;
-    
+
     private String name;
-    
+
     /**
      * 1 普通模块, 2 系统模块, 3功能模块
      */
-    @AttributeDef(alias="模块类型")
+    @AttrDef(alias="模块类型")
     private String type;
 
-    @AttributeDef(alias="图标")
+    @AttrDef(alias="图标")
     private String icon;
 
-    @AttributeDef(alias="模块路径")
+    @AttrDef(alias="模块路径")
     private String path;
-    
+
     private String url;
-    
+
     private String parentId;
-    
+
     private Boolean shortcut;
 
     private Integer showIndex;
-    
+
     private String memo;
-    
+
     @Ignore
     private List <RbacFunction> functions;
 

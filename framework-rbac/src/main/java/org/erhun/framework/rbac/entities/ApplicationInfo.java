@@ -2,7 +2,7 @@ package org.erhun.framework.rbac.entities;
 
 
 import org.erhun.framework.domain.entities.AbstractBizEntity;
-import org.erhun.framework.orm.annotations.AttributeDef;
+import org.erhun.framework.orm.annotations.AttrDef;
 import org.erhun.framework.orm.annotations.Table;
 import org.erhun.framework.orm.annotations.validator.Length;
 import org.erhun.framework.orm.annotations.validator.Prefix;
@@ -13,7 +13,7 @@ import org.erhun.framework.rbac.RbacModule;
 import java.util.List;
 
 /**
- * 
+ *
  * @author weichao<gorilla@gliyun.com>
  *
  */
@@ -21,15 +21,15 @@ import java.util.List;
 public class ApplicationInfo extends AbstractBizEntity<String> implements RbacApplication {
 
     private String name;
-    
+
     /**
      * 1 内部应用、2 外部应用
      */
-    @AttributeDef(item="YYLX", creatable = false)
+    @AttrDef(item="YYLX", creatable = false)
     private String type;
-    
+
     @Unique
-    @AttributeDef(alias="AppId")
+    @AttrDef(alias="AppId")
     private Integer appId;
 
     //@ValueGenerator(AppKeyGenerator.class)
@@ -42,23 +42,23 @@ public class ApplicationInfo extends AbstractBizEntity<String> implements RbacAp
     private String indexUrl;
 
     @Prefix("http://,https://")
-    @AttributeDef(alias = "登录URL")
+    @AttrDef(alias = "登录URL")
     private String loginUrl;
 
     @Prefix("http://,https://")
-    @AttributeDef(alias = "退出URL")
+    @AttrDef(alias = "退出URL")
     private String logoutUrl;
 
     private String privateExponent;
-    
+
     private String privateModulus;
-    
+
     private String publicExponent;
-    
+
     private String publicModulus;
-    
+
     private String icon;
-    
+
     private String memo;
 
     @Override
@@ -133,7 +133,7 @@ public class ApplicationInfo extends AbstractBizEntity<String> implements RbacAp
     public void setLogoutUrl(String logoutUrl) {
         this.logoutUrl = logoutUrl;
     }
-    
+
     @Override
     public String toString() {
         return getId();

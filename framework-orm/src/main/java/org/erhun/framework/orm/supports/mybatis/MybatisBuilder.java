@@ -1,16 +1,16 @@
 package org.erhun.framework.orm.supports.mybatis;
 
+import org.apache.ibatis.type.TypeHandler;
 import org.erhun.framework.basic.utils.generics.GenericsUtils;
 import org.erhun.framework.basic.utils.reflection.ReflectionUtils;
 import org.erhun.framework.basic.utils.string.StringPool;
 import org.erhun.framework.basic.utils.string.StringUtils;
-import org.erhun.framework.orm.AttributeInfo;
+import org.erhun.framework.orm.AttributeDefinition;
 import org.erhun.framework.orm.SQLUtils;
 import org.erhun.framework.orm.annotations.*;
 import org.erhun.framework.orm.dialect.Dialect;
 import org.erhun.framework.orm.dialect.MySQLDialect;
 import org.erhun.framework.orm.dialect.OracleDialect;
-import org.erhun.framework.orm.entities.IEntity;
 import org.erhun.framework.orm.entities.IOrderEntity;
 import org.erhun.framework.orm.entities.IVirtualDeleteEntity;
 import org.apache.ibatis.executor.keygen.Jdbc3KeyGenerator;
@@ -23,7 +23,6 @@ import org.apache.ibatis.session.Configuration;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -53,7 +52,7 @@ public final class MybatisBuilder {
         private Class<?> daoClass;
         private Class<?> entityClass;
         private List <ResultMap> resultMaps;
-        private Collection <AttributeInfo> entityFields;
+        private Collection <AttributeDefinition> entityFields;
         private Dialect dialect;
         private AttributeOverrides attributeOverrides;
         private Map <String, String> tableAlias;
@@ -109,7 +108,7 @@ public final class MybatisBuilder {
 
             List <ResultMapping> mappings = new ArrayList <ResultMapping> ();
 
-            for (AttributeInfo attributeInfo : entityFields) {
+            for (AttributeDefinition attributeInfo : entityFields) {
                 String columnName = attributeInfo.getColumnName();
                 String nestedResultMapId = null;
                 if(StringUtils.isNotEmpty(attributeInfo.getNestedResultMapId())){
@@ -125,13 +124,28 @@ public final class MybatisBuilder {
                     resultFlags.add(ResultFlag.ID);
                 }
 
-                ResultMapping mapping = new ResultMapping.Builder(configuration, attributeInfo.getFieldName(),
-                        columnName,
-                        attributeInfo.getField().getType()).flags(resultFlags).nestedResultMapId(nestedResultMapId).build();
+                ResultMapping mapping = null;
+
+                if(attributeInfo.getTypeHandler() != null){
+                    try {
+                        mapping = new ResultMapping.Builder(configuration, attributeInfo.getFieldName(),
+                                columnName,
+                                (TypeHandler) attributeInfo.getTypeHandler().newInstance()).flags(resultFlags).nestedResultMapId(nestedResultMapId).build();
+                    } catch (InstantiationException e) {
+                        e.printStackTrace();
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+                }else{
+                    mapping = new ResultMapping.Builder(configuration, attributeInfo.getFieldName(),
+                            columnName,
+                            attributeInfo.getField().getType()).flags(resultFlags).nestedResultMapId(nestedResultMapId).build();
+                }
+
                 mappings.add(mapping);
             }
 
-            resultMaps = new ArrayList <ResultMap>();
+            resultMaps = new ArrayList <>();
 
             String resultMapId = daoClass.getName() + "." + entityClass.getSimpleName();
 
@@ -386,7 +400,7 @@ public final class MybatisBuilder {
             buf1.append("<insert keyProperty=\"entity.id\">");
             buf1.append("insert into ").append(SQLUtils.resolveTableName(entityClass)).append(" (");
 
-            for (AttributeInfo field : entityFields) {
+            for (AttributeDefinition field : entityFields) {
                 if(field.isCreatable()) {
                     buf1.append(field.getColumnName()).append(",");
                     buf2.append("#{entity.").append(field.getFieldName()).append("},");
@@ -404,7 +418,7 @@ public final class MybatisBuilder {
         }
 
         private void buildInsertColumns(StringBuilder buf1, StringBuilder buf2, boolean excludeIdField) {
-            for (AttributeInfo field : entityFields) {
+            for (AttributeDefinition field : entityFields) {
                 if(field.isCreatable()) {
                     buf1.append("<if test=\"entity != null and entity.").append(field.getFieldName()).append("!=null").append("\">");
                     buf1.append("`").append(field.getColumnName()).append("`,");
@@ -431,7 +445,7 @@ public final class MybatisBuilder {
             buf.append("</foreach>");
             buf.append("</when>");
             buf.append("<otherwise>");
-            for (AttributeInfo attributeInfo : entityFields) {
+            for (AttributeDefinition attributeInfo : entityFields) {
                 if(attributeInfo.isUpdatable()) {
                     buf.append("<if test=\"entity.").append(attributeInfo.getFieldName()).append("!=null\">");
                     buf.append("`").append(attributeInfo.getColumnName()).append("`=#{entity.").append(attributeInfo.getFieldName()).append("},");
@@ -482,7 +496,7 @@ public final class MybatisBuilder {
             buf.append("</foreach>");
             buf.append("</when>");
             buf.append("<otherwise>");*/
-            for (AttributeInfo attributeInfo : entityFields) {
+            for (AttributeDefinition attributeInfo : entityFields) {
                 if(attributeInfo.isUpdatable()) {
                     buf.append("<if test=\"entity.").append(attributeInfo.getFieldName()).append("!=null\">");
                     buf.append(attributeInfo.getColumnName()).append("=#{entity.").append(attributeInfo.getFieldName()).append("},");
@@ -536,7 +550,7 @@ public final class MybatisBuilder {
 
             StringBuilder buf = new StringBuilder("<select>select ");
 
-            for (AttributeInfo field : entityFields) {
+            for (AttributeDefinition field : entityFields) {
                 if(field.isQueryable()){
                     buf.append(field.getColumnName()).append(",");
                 }
@@ -570,7 +584,7 @@ public final class MybatisBuilder {
 
             StringBuilder buf = new StringBuilder("<select>select ");
 
-            for (AttributeInfo field : entityFields) {
+            for (AttributeDefinition field : entityFields) {
                 if(field.isQueryable()){
                     buf.append(field.getColumnName()).append(",");
                 }
@@ -601,7 +615,7 @@ public final class MybatisBuilder {
             buf.append("select ");
             buf.append("<choose><when test=\"criteria.criteria.fetchFields!=null and criteria.criteria.fetchFields.length()&gt;0\">${criteria.criteria.fetchFields}</when>");
             buf.append("<otherwise>");
-            for (AttributeInfo field : entityFields) {
+            for (AttributeDefinition field : entityFields) {
                 if (field.isQueryable()) {
                     buf.append(masterAlias).append(".").append(field.getColumnName()).append(",");
                 }
@@ -654,7 +668,7 @@ public final class MybatisBuilder {
 
             Set<String> overrideNames = new HashSet<String>(2);
 
-            for (AttributeInfo field : entityFields) {
+            for (AttributeDefinition field : entityFields) {
 
                 if(!field.isQueryable() || overrideNames.contains(field.getFieldName())){
                     continue;
@@ -779,7 +793,7 @@ public final class MybatisBuilder {
             buf.append("<select>");
             buf.append("select ");
 
-            for (AttributeInfo field : entityFields) {
+            for (AttributeDefinition field : entityFields) {
                 if(field.isQueryable()){
                     buf.append(field.getColumnName()).append(",");
                 }
@@ -806,7 +820,7 @@ public final class MybatisBuilder {
             buf.append("<select>");
             buf.append("select ");
 
-            for (AttributeInfo field : entityFields) {
+            for (AttributeDefinition field : entityFields) {
                 if (field.isQueryable()) {
                     buf.append(field.getColumnName()).append(",");
                 }
@@ -834,7 +848,7 @@ public final class MybatisBuilder {
             buf1.append("<select>");
             buf1.append("select ");
 
-            for (AttributeInfo field : entityFields) {
+            for (AttributeDefinition field : entityFields) {
                 if (field.isQueryable()) {
                     buf1.append(masterAlias).append(StringPool.DOT).append(field.getColumnName()).append(",");
                 }
@@ -872,7 +886,7 @@ public final class MybatisBuilder {
             buf.append("<select>");
             buf.append("select ");
 
-            for (AttributeInfo field : entityFields) {
+            for (AttributeDefinition field : entityFields) {
                 if (field.isQueryable()) {
                     buf.append(field.getColumnName()).append(",");
                 }
@@ -949,7 +963,7 @@ public final class MybatisBuilder {
             buf.append("<select> ");
             buf.append("select <choose> <when test=\"(param1 instanceof String) and (param1 != null and param1 !='')\">${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",columns)}</when><otherwise>");
 
-            for (AttributeInfo field : entityFields) {
+            for (AttributeDefinition field : entityFields) {
                 if (field.isQueryable()) {
                     buf.append(field.getColumnName()).append(",");
                 }
@@ -968,7 +982,7 @@ public final class MybatisBuilder {
             buf.append("#{v}");
             buf.append("</foreach>");
             buf.append("</when>");
-            buf.append("<otherwise> ${pv.name}${@org.erhun.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</otherwise></choose>");
+            buf.append("<otherwise> ${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",pv.name)}${@org.erhun.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</otherwise></choose>");
             buf.append("</foreach>");
 
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
@@ -1021,7 +1035,7 @@ public final class MybatisBuilder {
             buf.append("#{v}");
             buf.append("</foreach>");
             buf.append("</when>");
-            buf.append("<otherwise> ${pv.name}${@org.erhun.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</otherwise></choose>");
+            buf.append("<otherwise>${@org.erhun.framework.orm.SQLUtils@resolveColumnName(\""+entityClass.getName()+"\",pv.name}${@org.erhun.framework.orm.SQLUtils@parseCondition(\""+entityClass.getName()+"\",pv.name,pv.value)}</otherwise></choose>");
             buf.append("</foreach>");
             if(IVirtualDeleteEntity.class.isAssignableFrom(entityClass)){
                 buf.append(" and is_deleted='1'");
@@ -1137,7 +1151,7 @@ public final class MybatisBuilder {
 
         }
 
-        private String parseJoin(AttributeInfo join, StringBuilder buf1, StringBuilder buf3) {
+        private String parseJoin(AttributeDefinition join, StringBuilder buf1, StringBuilder buf3) {
 
             String joinKey = join.getJoinKey();
             String key = join.getFieldName();
@@ -1262,7 +1276,7 @@ public final class MybatisBuilder {
             return joins;
         }
 
-        private String getTableAlias(Class <? extends Serializable> clazz, AttributeInfo attr, boolean generated) {
+        private String getTableAlias(Class <? extends Serializable> clazz, AttributeDefinition attr, boolean generated) {
 
             String name = attr.getFieldName();
 

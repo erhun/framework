@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface AttributeOverrides {
 
-    AttributeDef [] value() default {};
+    AttrDef[] value() default {};
 
     AnnotationOverride[] annotations() default {};
 

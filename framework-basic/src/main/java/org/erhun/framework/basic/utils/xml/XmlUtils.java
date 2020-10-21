@@ -57,10 +57,12 @@ public class XmlUtils {
 						type = tmp[1];
 					}
 					List<Element> selectedNodes = (List) document.selectNodes(path);
-					if ("list".equals(type)) {
-						returnMap.put(selectedNodes.get(0).getParent().getName(), parseToList(selectedNodes));
-					} else {
-						transferToMap(returnMap, selectedNodes, listNodes);
+					if(selectedNodes != null) {
+						if ("list".equals(type)) {
+							returnMap.put(selectedNodes.get(0).getParent().getName(), parseToList(selectedNodes));
+						} else {
+							transferToMap(returnMap, selectedNodes, listNodes);
+						}
 					}
 				}
 			}
@@ -85,7 +87,9 @@ public class XmlUtils {
 		try {
 			Document document = createDocument(content);
 			Element selectedNode = (Element) document.selectSingleNode(nodePathExpression);
-			return parseToList(selectedNode.elements());
+			if(selectedNode != null) {
+				return parseToList(selectedNode.elements());
+			}
 		} catch (DocumentException e) {
 			e.printStackTrace();
 		}

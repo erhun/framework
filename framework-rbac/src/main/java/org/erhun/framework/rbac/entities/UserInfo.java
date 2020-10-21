@@ -2,7 +2,7 @@ package org.erhun.framework.rbac.entities;
 
 
 import org.erhun.framework.domain.entities.AbstractBizEntity;
-import org.erhun.framework.orm.annotations.AttributeDef;
+import org.erhun.framework.orm.annotations.AttrDef;
 import org.erhun.framework.orm.annotations.Condition;
 import org.erhun.framework.orm.annotations.Table;
 import org.erhun.framework.orm.annotations.Transient;
@@ -11,68 +11,68 @@ import org.erhun.framework.orm.annotations.validator.Unique;
 import java.util.Date;
 
 /**
- * 
+ *
  * @author weichao<gorilla@gliyun.com>
  *
  */
 @Table(value="t_rbac_user", alias="用户信息")
 public class UserInfo extends AbstractBizEntity<String> {
-    
+
     private static final long serialVersionUID = 1L;
 
     private String name;
-    
+
     private String alias;
-    
+
     private String nickname;
-    
+
     private String email;
-    
+
     @Unique
-    @AttributeDef(alias="手机号")
+    @AttrDef(alias="手机号")
     private String mobile;
-    
+
     private String photo;
-    
+
     @Unique
-    @AttributeDef(updatable=false, alias="帐号")
+    @AttrDef(updatable=false, alias="帐号")
     private String account;
-    
+
     private String password;
-    
-    @AttributeDef(creatable=false)
+
+    @AttrDef(creatable=false)
     private String password2;
-    
-    @AttributeDef(updatable=false)
+
+    @AttrDef(updatable=false)
     private Integer errorCount;
-    
-    @AttributeDef(creatable=false, updatable=false)
+
+    @AttrDef(creatable=false, updatable=false)
     private Date loginTime;
-    
+
     private Boolean admin;
-    
+
     /**
      * 1 活动， 2 锁定
      */
-    @AttributeDef(updatable=false, item = "YHZT", text=true)
+    @AttrDef(updatable=false, item = "YHZT", text=true)
     private String status;
-    
+
     /**
      * 1 内部、2 外部
      */
     private String type;
-    
+
     private String memo;
 
     @Transient
     @Condition("t.id in(select t.user_id from uac_user_link_group t inner join uac_group g on g.is_valid='1' and g.id=t.group_id where g.application_id in(${applicationId}))")
     private String applicationId;
-    
+
     @Transient
     private String groupId;
 
     private Boolean online;
-    
+
     public String getPassword() {
         return password;
     }
