@@ -1,7 +1,6 @@
 package org.erhun.framework.orm;
 
 
-import org.apache.ibatis.type.TypeHandler;
 import org.erhun.framework.basic.utils.ClassUtils;
 import org.erhun.framework.basic.utils.lambda.GetterLambdaFunction;
 import org.erhun.framework.basic.utils.lambda.LambdaUtils;

@@ -6,12 +6,12 @@ import org.erhun.framework.orm.IGenericDAO;
 import java.io.Serializable;
 
 /**
- * 
+ *
  * @author weichao<gorilla@gliyun.com>
  * @param <Id>
  * @param <E>
  */
-public interface BaseDAO<Id extends Serializable, E extends BaseEntity> extends IGenericDAO<Id, E> {
+public interface BaseDAO<Id extends Serializable, E extends BaseEntity<Id>> extends IGenericDAO<Id, E> {
 
 
 }

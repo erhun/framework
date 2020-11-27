@@ -171,6 +171,9 @@ public class OrmTestCase {
 
         System.out.println(JsonUtils.toJSONString(testInfoList));
 
+        testDao.queryByCriteria(Criteria.fetch().orderByAsc(TestEntity::getId));
+        testDao.queryByCriteria(Criteria.fetch().orderByAsc(TestEntity::getCreateTime));
+
     }
 
 

@@ -424,7 +424,12 @@ public final class MybatisBuilder {
                     buf1.append("`").append(field.getColumnName()).append("`,");
                     buf1.append("</if>");
                     buf2.append("<if test=\"entity != null and entity.").append(field.getFieldName()).append("!=null").append("\">");
-                    buf2.append("#{entity.").append(field.getFieldName()).append("}, ");
+                    if(field.getTypeHandler() != null){
+                        buf2.append("#{entity.").append(field.getFieldName()).append(", typeHandler=").append(field.getTypeHandler().getName()).append("}, ");
+                    }else{
+                        buf2.append("#{entity.").append(field.getFieldName()).append("}, ");
+                    }
+
                     buf2.append("</if>");
                 }
             }
@@ -445,10 +450,14 @@ public final class MybatisBuilder {
             buf.append("</foreach>");
             buf.append("</when>");
             buf.append("<otherwise>");
-            for (AttributeDefinition attributeInfo : entityFields) {
-                if(attributeInfo.isUpdatable()) {
-                    buf.append("<if test=\"entity.").append(attributeInfo.getFieldName()).append("!=null\">");
-                    buf.append("`").append(attributeInfo.getColumnName()).append("`=#{entity.").append(attributeInfo.getFieldName()).append("},");
+            for (AttributeDefinition def : entityFields) {
+                if(def.isUpdatable()) {
+                    buf.append("<if test=\"entity.").append(def.getFieldName()).append("!=null\">");
+                    if(def.getTypeHandler() != null){
+                        buf.append("`").append(def.getColumnName()).append("`=#{entity.").append(def.getFieldName()).append(",typeHandler=").append(def.getTypeHandler()).append("},");
+                    }else{
+                        buf.append("`").append(def.getColumnName()).append("`=#{entity.").append(def.getFieldName()).append("},");
+                    }
                     buf.append("</if>");
                 }
             }
@@ -625,17 +634,13 @@ public final class MybatisBuilder {
 
             buf.append(" from ");
             buf.append(SQLUtils.resolveTableName(entityClass)).append(" ").append(masterAlias);
-            buf.append(" where ");
+            buf.append(" where 1=1 ");
 
             if (IVirtualDeleteEntity.class.isAssignableFrom(entityClass)) {
-                buf.append("(");
+                buf.append(" and is_deleted=1 ");
             }
 
             buildCriteriaConditions(buf);
-
-            if (IVirtualDeleteEntity.class.isAssignableFrom(entityClass)) {
-                buf.append(") and is_deleted='1'");
-            }
 
             buf.append(" ${criteria.criteria.groupBy} ");
             buf.append(" ${criteria.criteria.orderBy} ");
@@ -644,7 +649,9 @@ public final class MybatisBuilder {
         }
 
         private void buildCriteriaConditions(StringBuilder buf) {
-            buf.append("<foreach collection=\"criteria.criteria.conditions()\" item=\"cc\" open=\"\" close=\"\" separator=\"\">");
+            buf.append("<if test=\"criteria.criteria.conditions.size()>0\">");
+            buf.append(" and (");
+            buf.append("<foreach collection=\"criteria.criteria.conditions()\" item=\"cc\" open=\"\" close=\"\" separator=\" \">");
             buf.append("<choose><when test=\"cc instanceof String\">${cc}</when>");
             buf.append("<otherwise>");
             //buf.append("${cc.columnName}${cc.expression.condition}#{cc.value}");
@@ -659,6 +666,7 @@ public final class MybatisBuilder {
             buf.append("</otherwise></choose>");
             buf.append("</otherwise></choose>");
             buf.append("</foreach>");
+            buf.append(")</if>");
         }
 
         private StringBuilder buildQueryPageSelectiveBody(StringBuilder select){
@@ -709,9 +717,7 @@ public final class MybatisBuilder {
             }
 
             condition.append("<if test=\"param3!=null and param3 instanceof org.erhun.framework.orm.Criteria\">");
-            condition.append( " and (" );
             buildCriteriaConditions(condition);
-            condition.append(")");
             condition.append("</if>");
 
 

@@ -19,6 +19,11 @@ public class MybatisMappedStatementRegistry implements BeanPostProcessor {
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+       return bean;
+    }
+
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         if (sqlSessionFactory == null && bean instanceof SqlSessionFactory) {
             sqlSessionFactory = (SqlSessionFactory) bean;
         }
@@ -36,11 +41,6 @@ public class MybatisMappedStatementRegistry implements BeanPostProcessor {
 
             }
         }
-        return bean;
-    }
-
-    @Override
-    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         return bean;
     }
 
