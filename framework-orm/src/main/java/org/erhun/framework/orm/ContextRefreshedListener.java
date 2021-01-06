@@ -23,13 +23,18 @@ import java.util.Map;
  */
 public class ContextRefreshedListener implements ApplicationListener<ContextRefreshedEvent> {
 
-    protected static final Logger LOGGER = LoggerFactory.getLogger(ContextRefreshedListener.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ContextRefreshedListener.class);
+
+    private boolean running = false;
+
+    private boolean inited = false;
 
     private Dialect dialect = new MySQLDialect();
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent ev) {
-        if(ev.getApplicationContext().getParent() == null){
+        if(!running && !inited){
+            running = true;
             SqlSessionFactory sqlSessionFactory = ev.getApplicationContext().getBean(SqlSessionFactory.class);
             Map<String, IGenericDAO> beans = ev.getApplicationContext().getBeansOfType(IGenericDAO.class);
             if(MapUtils.isNotEmpty(beans)){
@@ -48,6 +53,8 @@ public class ContextRefreshedListener implements ApplicationListener<ContextRefr
                     }
                 });
             }
+            running = false;
+            inited = true;
         }
     }
 
