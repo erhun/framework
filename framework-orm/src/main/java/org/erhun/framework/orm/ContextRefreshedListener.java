@@ -52,9 +52,9 @@ public class ContextRefreshedListener implements ApplicationListener<ContextRefr
                         e.printStackTrace();
                     }
                 });
+                running = false;
+                inited = true;
             }
-            running = false;
-            inited = true;
         }
     }
 
